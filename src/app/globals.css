@@ -1,26 +1,128 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Fonts (loaded via next/font in layout.tsx) */
+  --font-sans: var(--font-quicksand), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-bricolage), var(--font-quicksand), sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@theme {
+  /* Material-style surface/ink tokens from DESIGN.md */
+  --color-surface: #f8f9ff;
+  --color-surface-lowest: #ffffff;
+  --color-surface-container: #e4efff;
+  --color-on-surface: #121c28;
+  --color-on-surface-variant: #3f4851;
+  --color-inverse-surface: #27313e;
+  --color-outline: #6f7882;
+  --color-outline-variant: #bfc7d3;
+  --color-primary: #006097;
+  --color-primary-container: #007abd;
+
+  /* Brand palette */
+  --color-blue: #0290de;
+  --color-blue-600: #087dcc;
+  --color-blue-900: #0b2d5c;
+  --color-orange: #f58634;
+  --color-orange-600: #e07223;
+  --color-navy-950: #0a1626;
+  --color-navy-900: #101c31;
+  --color-navy-800: #162844;
+  --color-ink-900: #0f1b2d;
+  --color-ink-800: #1d2733;
+  --color-ink-500: #6b7280;
+  --color-ink-400: #94a3b8;
+  --color-line: #cbd9e8;
+  --color-tint-100: #f7f9fc;
+  --color-tint-200: #f2f6fb;
+  --color-tint-300: #eef1f5;
+  --color-sky-50: #edf6ff;
+  --color-sky-100: #eaf4ff;
+
+  /* Elevation */
+  --shadow-search: 0 20px 50px rgba(1, 40, 74, 0.14);
+  --shadow-card: 0 14px 34px rgba(1, 40, 74, 0.16);
+  --shadow-overlay: 0 24px 48px rgba(10, 22, 38, 0.18);
+  --shadow-chat: 0 10px 30px rgba(1, 40, 74, 0.35);
+
+  /* Type scale */
+  --text-hero: 48px;
+  --text-hero--line-height: 56px;
+  --text-hero-mobile: 32px;
+  --text-hero-mobile--line-height: 40px;
+
+  /* 1232px content + 16px gutters */
+  --container-page: 1264px;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    background: #ffffff;
+    color: var(--color-on-surface);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 20px;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection {
+    background: var(--color-primary);
+    color: #fff;
+  }
+  :focus-visible {
+    outline: 2px solid rgba(2, 144, 222, 0.6);
+    outline-offset: 2px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    * {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer utilities {
+  .hero-overlay {
+    background: linear-gradient(
+      180deg,
+      rgba(16, 28, 49, 0.72) 0%,
+      rgba(16, 28, 49, 0.45) 45%,
+      rgba(16, 28, 49, 0.85) 100%
+    );
+  }
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* Mobile drawer: cards rise in one after another (tbils.com "cardIn"). */
+.drawer-card {
+  opacity: 0;
+  transform: translateY(16px);
+}
+[data-open="true"] .drawer-card {
+  animation: drawer-card-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) calc(0.08s + var(--i, 0) * 0.04s) forwards;
+}
+@keyframes drawer-card-in {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
