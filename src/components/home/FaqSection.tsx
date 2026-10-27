@@ -11,7 +11,7 @@ export function FaqSection() {
   return (
     <section aria-labelledby="faq-title" className="bg-white py-[52px]">
       <Container>
-        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+        <div data-reveal className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
           <div>
             <h2 id="faq-title" className="font-display text-[28px] font-extrabold leading-[1.08] tracking-[-0.035em] text-[#12233d] md:text-[34px]">
               Questions before you book?
@@ -25,7 +25,7 @@ export function FaqSection() {
             View all FAQs
           </Link>
         </div>
-        <div className="mt-6 grid grid-cols-1 gap-x-[18px] md:grid-cols-3">
+        <div data-reveal-stagger className="mt-6 grid grid-cols-1 gap-x-[18px] md:grid-cols-3">
           {faqs.map((f, i) => {
             const isOpen = open === i;
             return (

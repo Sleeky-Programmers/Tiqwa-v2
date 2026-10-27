@@ -132,7 +132,7 @@ export function Header({ solid = false }: { solid?: boolean }) {
 
           <div className="flex items-center gap-2">
             <Link
-              href="/contact"
+              href="/dashboard"
               className="flex items-center gap-2 whitespace-nowrap rounded-[10px] bg-orange px-[22px] py-[11px] text-sm font-bold leading-[14px] tracking-[0.01em] text-white shadow-[0_1px_2px_rgba(74,34,4,0.2)] transition hover:bg-orange-600"
             >
               <User aria-hidden className="size-4" />
@@ -238,7 +238,7 @@ function MobileDrawer({ open, onClose }: { open: boolean; onClose: () => void })
             ))}
             <li className="drawer-card pt-[6px]" style={{ "--i": items.length } as React.CSSProperties}>
               <Link
-                href="/contact"
+                href="/dashboard"
                 onClick={onClose}
                 className={cn(card, "border-[rgba(2,152,218,0.4)] bg-[rgba(2,144,222,0.16)] hover:bg-[rgba(2,144,222,0.24)]")}
               >

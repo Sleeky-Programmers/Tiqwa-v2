@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Bricolage_Grotesque, Quicksand } from "next/font/google";
-import { ChatPill } from "@/components/layout/ChatPill";
-import { Footer } from "@/components/layout/Footer";
-import { WelcomeOffer } from "@/components/layout/WelcomeOffer";
+import { Suspense } from "react";
+import { NavProgress } from "@/components/motion/NavProgress";
+import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { site } from "@/data/site";
 import "./globals.css";
 
@@ -44,12 +44,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         >
           Skip to content
         </a>
-        <main id="main" className="flex-1">
-          {children}
-        </main>
-        <Footer />
-        <ChatPill />
-        <WelcomeOffer />
+        {children}
+        <Suspense fallback={null}>
+          <NavProgress />
+        </Suspense>
+        <ScrollReveal />
       </body>
     </html>
   );

@@ -55,7 +55,7 @@ export function Footer() {
         </Container>
       </section>
 
-      <Container className="grid grid-cols-1 gap-10 pb-[37px] pt-[62px] sm:grid-cols-2 lg:grid-cols-[318px_repeat(4,193px)] lg:gap-[36px]">
+      <Container data-reveal-stagger className="grid grid-cols-1 gap-10 pb-[37px] pt-[62px] sm:grid-cols-2 lg:grid-cols-[318px_repeat(4,193px)] lg:gap-[36px]">
         <div>
           <Logo width={126} />
           <p className="mt-[17px] max-w-[280px] text-[13px] leading-[1.65] text-[#9fb2c8]">

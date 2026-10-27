@@ -1,8 +1,12 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
-export function Container({ className, children }: { className?: string; children: ReactNode }) {
-  return <div className={cn("mx-auto w-full max-w-page px-4", className)}>{children}</div>;
+export function Container({ className, children, ...rest }: { className?: string; children: ReactNode } & React.HTMLAttributes<HTMLDivElement> & { "data-reveal"?: boolean | string }) {
+  return (
+    <div {...rest} className={cn("mx-auto w-full max-w-page px-4", className)}>
+      {children}
+    </div>
+  );
 }
 
 export function Eyebrow({ children, className }: { children: ReactNode; className?: string }) {

@@ -126,3 +126,244 @@
     transform: translateY(0);
   }
 }
+
+/* Loaders, modals and page transitions (ported from tbils.com). */
+@keyframes indeterminate {
+  0% { left: -35%; }
+  100% { left: 100%; }
+}
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.45; transform: scale(0.8); }
+}
+@keyframes bob {
+  0%, 100% { transform: translateY(2px); }
+  50% { transform: translateY(-3px); }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(14px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes modal-in {
+  from { opacity: 0; transform: translateY(-12px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes acc-reveal {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes shimmer {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
+}
+/* The travelling white gaps on a flight card's route line. */
+@keyframes route-flow {
+  0% { left: 8%; right: 100%; }
+  60%, 100% { left: 107%; right: -8%; }
+}
+.route-bar {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  height: 3px;
+  border-radius: 2px;
+  background: #0290de;
+  overflow: hidden;
+}
+.route-bar::before,
+.route-bar::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 3px;
+  background: #fff;
+  animation: route-flow 3s linear infinite;
+}
+.route-bar::after {
+  animation-delay: 1.5s;
+}
+.skeleton {
+  background: linear-gradient(90deg, #eef1f5 25%, #f7f9fc 50%, #eef1f5 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+/* Two overlaid range inputs make the price slider; only the thumbs take pointer input. */
+.dual-range {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 6px;
+  margin: 0;
+  background: transparent;
+  pointer-events: none;
+  appearance: none;
+}
+.dual-range::-webkit-slider-thumb {
+  pointer-events: auto;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #0290de;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 1px #0290de, 0 2px 6px rgba(2, 144, 222, 0.35);
+  cursor: pointer;
+}
+.dual-range::-moz-range-thumb {
+  pointer-events: auto;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #0290de;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 1px #0290de;
+  cursor: pointer;
+}
+.dual-range:focus-visible::-webkit-slider-thumb {
+  outline: 2px solid rgba(2, 144, 222, 0.6);
+  outline-offset: 2px;
+}
+
+/* Themed scrollbars: slim, rounded, brand-tinted thumb, no arrow buttons.
+   WebKit/Blink use the pseudo-elements; Firefox gets the standard properties
+   (kept out of Chrome, where they would override the pseudo-elements). */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+html::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #b8d6ee;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: #0290de;
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+@supports (-moz-appearance: none) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #b8d6ee transparent;
+  }
+  html {
+    scrollbar-color: #9fc7e6 #f1f5f9;
+  }
+}
+
+/* ---------- Motion system ---------- */
+/* Scroll reveal: elements with [data-reveal] fade/rise in when they enter the viewport
+   (ScrollReveal adds .is-revealed). Children of [data-reveal-stagger] cascade. */
+/* Driven by animation (not transition) with backwards fill, so once a reveal finishes it
+   leaves no transform/delay behind and hover effects on the same element stay instant. */
+@keyframes reveal-in {
+  from { opacity: 0; transform: var(--reveal-from, translateY(24px)); }
+  to { opacity: 1; transform: none; }
+}
+[data-reveal]:not(.is-revealed),
+[data-reveal-stagger]:not(.is-revealed) > * {
+  opacity: 0;
+}
+[data-reveal="left"] { --reveal-from: translateX(-28px); }
+[data-reveal="right"] { --reveal-from: translateX(28px); }
+[data-reveal="zoom"] { --reveal-from: scale(0.96); }
+[data-reveal].is-revealed {
+  animation: reveal-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) var(--reveal-delay, 0ms) backwards;
+}
+[data-reveal-stagger] > * { --reveal-from: translateY(18px); }
+[data-reveal-stagger].is-revealed > * {
+  animation: reveal-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+[data-reveal-stagger].is-revealed > *:nth-child(2) { animation-delay: 70ms; }
+[data-reveal-stagger].is-revealed > *:nth-child(3) { animation-delay: 140ms; }
+[data-reveal-stagger].is-revealed > *:nth-child(4) { animation-delay: 210ms; }
+[data-reveal-stagger].is-revealed > *:nth-child(5) { animation-delay: 280ms; }
+[data-reveal-stagger].is-revealed > *:nth-child(6) { animation-delay: 350ms; }
+[data-reveal-stagger].is-revealed > *:nth-child(n + 7) { animation-delay: 420ms; }
+
+/* Hover: cards lift with the brand-tinted shadow; images inside zoom gently. */
+.hover-lift {
+  transition:
+    transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 40px rgba(1, 40, 74, 0.14);
+}
+.hover-zoom img {
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.hover-zoom:hover img {
+  transform: scale(1.06);
+}
+/* Buttons/links with .press get a small lift on hover and sink on click. */
+.press {
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background-color 0.18s ease,
+    opacity 0.18s ease;
+}
+.press:hover { transform: translateY(-1px); }
+.press:active { transform: translateY(1px) scale(0.98); }
+/* Sliding underline for text links. */
+.link-underline {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 0% 1.5px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  transition: background-size 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.link-underline:hover { background-size: 100% 1.5px; }
+/* Gentle float for decorative icons. */
+@keyframes float-y {
+  0%, 100% { transform: translateY(0) rotate(-12deg); }
+  50% { transform: translateY(-8px) rotate(-12deg); }
+}
+.float-y { animation: float-y 5s ease-in-out infinite; }
+
+/* Route-change progress bar (NavProgress). */
+@keyframes nav-progress {
+  0% { width: 0; }
+  60% { width: 70%; }
+  100% { width: 88%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal],
+  [data-reveal-stagger] > * {
+    opacity: 1 !important;
+    animation: none !important;
+  }
+  .hover-lift:hover,
+  .press:hover,
+  .press:active,
+  .hover-zoom:hover img {
+    transform: none;
+  }
+}
