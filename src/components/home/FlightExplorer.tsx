@@ -19,7 +19,7 @@ export function FlightExplorer() {
   return (
     <section aria-labelledby="explore-title" className="bg-[#f7faff] py-12">
       <div className="mx-auto max-w-[1312px] px-4">
-        <div className="rounded-[18px] border-[0.83px] border-[#e2eaf3] bg-white px-5 py-[37px] sm:px-[41px]">
+        <div data-reveal className="rounded-[18px] border-[0.83px] border-[#e2eaf3] bg-white px-5 py-[37px] sm:px-[41px]">
           <p className="text-xs font-bold uppercase leading-3 tracking-[0.1em] text-[#087dcc]">Flight booking from Nigeria</p>
           <h2 id="explore-title" className="mt-2 font-display text-[28px] font-bold leading-[1.2] text-[#12233d] md:text-[34px]">
             Find the right flight for your next journey
@@ -115,7 +115,7 @@ export function FlightExplorer() {
                       <li key={rt.label}>
                         <Link
                           href={rt.href}
-                          className="block rounded-[10px] border-[0.83px] border-[#e3ebf3] bg-white px-4 py-[14px] transition hover:border-[#087dcc]"
+                          className="hover-lift block rounded-[10px] border-[0.83px] border-[#e3ebf3] bg-white px-4 py-[14px] hover:border-[#087dcc]"
                         >
                           <span className="block text-[15px] font-bold leading-[1.25] tracking-[-0.01em] text-[#1a1a1a]">{rt.label}</span>
                           <span className="mt-3 block text-[13px] font-semibold leading-[1.3] text-[#087dcc]">Flights</span>

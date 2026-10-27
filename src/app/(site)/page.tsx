@@ -3,6 +3,7 @@ import { FaqSection } from "@/components/home/FaqSection";
 import { Hero } from "@/components/home/Hero";
 import { NewsletterSection } from "@/components/home/NewsletterSection";
 import { FlightExplorer } from "@/components/home/FlightExplorer";
+import { WelcomeOffer } from "@/components/layout/WelcomeOffer";
 import { PartnersStrip, PromoBanner, ServicesBand, WhyTbils } from "@/components/home/Sections";
 import { faqs } from "@/data/content";
 import { contact } from "@/data/contact";
@@ -42,6 +43,7 @@ export default function Home() {
       <FaqSection />
       <NewsletterSection />
       <FlightExplorer />
+      <WelcomeOffer />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
     </>
   );

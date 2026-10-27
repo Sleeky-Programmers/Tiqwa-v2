@@ -53,7 +53,7 @@ export function DealsSection() {
   return (
     <section aria-labelledby="deals-title" className="pb-4 pt-[45px]">
       <Container>
-        <div className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+        <div data-reveal className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-end">
           <div>
             <span className="inline-flex items-center gap-1 rounded-full border-[0.83px] border-[rgba(2,144,222,0.28)] bg-[rgba(2,144,222,0.1)] px-[14px] py-[6px] text-xs font-bold uppercase leading-[18px] tracking-[0.08em] text-blue">
               ✦ Handpicked this week
@@ -72,7 +72,7 @@ export function DealsSection() {
             View all cheap flights
           </Link>
         </div>
-        <div className="no-scrollbar -mx-4 flex snap-x scroll-px-4 gap-[14px] overflow-x-auto px-4 pb-6 pt-1">
+        <div data-reveal-stagger className="no-scrollbar -mx-4 flex snap-x scroll-px-4 gap-[14px] overflow-x-auto px-4 pb-6 pt-1">
           {deals.map((d) => (
             <DealCard key={d.id} deal={d} />
           ))}

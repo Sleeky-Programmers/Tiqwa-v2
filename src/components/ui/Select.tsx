@@ -19,6 +19,7 @@ export function Select({
   onChange,
   className,
   triggerClassName,
+  placeholder = "Select",
 }: {
   name?: string;
   /** Accessible name, e.g. "Cabin class". */
@@ -28,6 +29,8 @@ export function Select({
   onChange: (value: string) => void;
   className?: string;
   triggerClassName?: string;
+  /** Shown (greyed) while no option matches `value`. */
+  placeholder?: string;
 }) {
   const id = useId();
   const items: SelectOption[] = options.map((o) => (typeof o === "string" ? { value: o, label: o } : o));
@@ -72,7 +75,9 @@ export function Select({
         }}
         className={cn(fieldBox, "w-full justify-between text-left", open && "border-blue ring-2 ring-blue/25", triggerClassName)}
       >
-        <span className="truncate text-[15px] font-medium leading-6 text-[#1e293b]">{current?.label}</span>
+        <span className={cn("truncate text-[15px] font-medium leading-6", current ? "text-[#1e293b]" : "font-normal text-[#9ca3af]")}>
+          {current?.label ?? placeholder}
+        </span>
         <span className={cn("transition-transform duration-200", open && "rotate-180")}>
           <Chevron />
         </span>

@@ -7,7 +7,7 @@ export function PromoBanner() {
   return (
     <section className="pb-[56px]">
       <Container>
-        <Link href="/contact?type=holiday" className="block overflow-hidden rounded-[18px]">
+        <Link data-reveal="zoom" href="/contact?type=holiday" className="hover-zoom hover-lift block overflow-hidden rounded-[18px]">
           <Image
             src="/images/promo/qatar.png"
             alt="Discover Qatar with TBILS Tourism"
@@ -26,6 +26,7 @@ export function ServicesBand() {
   return (
     <section aria-labelledby="services-title" className="bg-navy-900 py-16 text-white">
       <Container>
+        <div data-reveal>
         <p className="text-xs font-bold uppercase leading-[18px] tracking-[0.08em] text-[#70c4ff]">Beyond your booking</p>
         <h2
           id="services-title"
@@ -36,7 +37,8 @@ export function ServicesBand() {
         <p className="mt-[10px] max-w-[540px] text-sm leading-[1.55] text-[#b9c6d8]">
           Practical support for every stage of your journey and your next big move.
         </p>
-        <div className="mt-[30px] grid grid-cols-1 gap-[18px] sm:grid-cols-2 lg:grid-cols-3">
+        </div>
+        <div data-reveal-stagger className="mt-[30px] grid grid-cols-1 gap-[18px] sm:grid-cols-2 lg:grid-cols-3">
           {services.map((s, i) => {
             const external = s.href.startsWith("http");
             return (
@@ -44,7 +46,7 @@ export function ServicesBand() {
                 key={s.title}
                 href={s.href}
                 {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-                className="group relative flex h-[270px] flex-col justify-end overflow-hidden rounded-2xl border-[0.83px] border-white/15 shadow-[0_14px_30px_rgba(0,0,0,0.2)]"
+                className="group hover-lift relative flex h-[270px] flex-col justify-end overflow-hidden rounded-2xl border-[0.83px] border-white/15 shadow-[0_14px_30px_rgba(0,0,0,0.2)] hover:border-[#70c4ff]/60"
               >
                 <Image
                   src={s.image}
@@ -73,7 +75,7 @@ export function PartnersStrip() {
   const row = [...partners, ...partners, ...partners];
   return (
     <section aria-labelledby="partners-title" className="overflow-hidden bg-white pb-[52px] pt-12">
-      <Container className="text-center">
+      <Container className="text-center" data-reveal>
         <p className="text-xs font-bold uppercase leading-[18px] tracking-[0.1em] text-[#087dcc]">Our travel network</p>
         <h2 id="partners-title" className="mt-[9px] text-[24px] font-bold leading-[1.2] tracking-[-0.025em] text-[#12233d] md:text-[28px]">
           Trusted by the names you fly with
@@ -126,16 +128,16 @@ export function WhyTbils() {
   return (
     <section aria-labelledby="why-title" className="bg-tint-100 py-16">
       <Container>
-        <div className="max-w-[610px]">
+        <div data-reveal className="max-w-[610px]">
           <p className="text-[13px] font-bold uppercase leading-[19.5px] tracking-[0.08em] text-[#087dcc]">Travel with confidence</p>
           <h2 id="why-title" className="mt-[11px] font-display text-[28px] font-extrabold leading-[1.08] tracking-[-0.035em] text-[#12233d] md:text-[34px]">
             Why book cheap flights with TBILS?
           </h2>
           <p className="mt-[10px] text-sm leading-[1.55] text-[#617087]">Everything you need for a smoother journey, from search to take-off.</p>
         </div>
-        <div className="mt-[25px] grid grid-cols-1 gap-y-5 rounded-[20px] border-[0.83px] border-[#e1e8f1] bg-white px-[19px] py-[22px] shadow-[0_16px_38px_rgba(21,51,87,0.06)] sm:grid-cols-2 lg:grid-cols-4">
+        <div data-reveal-stagger className="mt-[25px] grid grid-cols-1 gap-y-5 rounded-[20px] border-[0.83px] border-[#e1e8f1] bg-white px-[19px] py-[22px] shadow-[0_16px_38px_rgba(21,51,87,0.06)] sm:grid-cols-2 lg:grid-cols-4">
           {whyTbils.map((w) => (
-            <div key={w.title} className="flex items-start gap-3 lg:pr-[37px]">
+            <div key={w.title} className="group flex items-start gap-3 lg:pr-[37px]">
               <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#eaf4ff] text-[#087dcc]">
                 <svg viewBox="0 0 24 24" aria-hidden className="size-5 fill-none stroke-current" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
                   {whyIcons[w.icon]}

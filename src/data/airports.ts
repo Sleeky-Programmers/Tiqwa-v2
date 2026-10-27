@@ -51,6 +51,8 @@ export const airports: Airport[] = [
   { code: "LCA", city: "Larnaca", name: "Larnaca International Airport", country: "Cyprus" },
   { code: "LIS", city: "Lisbon", name: "Humberto Delgado Airport", country: "Portugal" },
   { code: "DUB", city: "Dublin", name: "Dublin Airport", country: "Ireland" },
+  { code: "ZRH", city: "Zurich", name: "Zurich Airport", country: "Switzerland" },
+  { code: "BRU", city: "Brussels", name: "Brussels Airport", country: "Belgium" },
   // Middle East & Asia
   { code: "DXB", city: "Dubai", name: "Dubai International Airport", country: "United Arab Emirates" },
   { code: "AUH", city: "Abu Dhabi", name: "Zayed International Airport", country: "United Arab Emirates" },

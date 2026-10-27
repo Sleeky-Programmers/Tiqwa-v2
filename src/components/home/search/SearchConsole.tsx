@@ -4,7 +4,10 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { Airport } from "@/data/airports";
+import { getAirport, type Airport } from "@/data/airports";
+import { rememberSearch } from "@/lib/flights/recent";
+import { parseSearch } from "@/lib/flights/search-params";
+import type { FlightSearch } from "@/lib/flights/types";
 import { AirportCombobox, CabinField, DatePicker, TravellersField, type Pax } from "./fields";
 
 type Trip = "round" | "oneway" | "multi";
@@ -81,20 +84,39 @@ const today = () => {
 const searchBtn =
   "flex h-[52px] items-center justify-center rounded-xl bg-blue px-7 text-base font-semibold text-white transition hover:bg-blue-600 active:scale-[0.98]";
 
-export function SearchConsole() {
+const airport = (code?: string) => (code ? (getAirport(code) ?? null) : null);
+
+/**
+ * Flight search box. `initial` pre-fills it (used by "Modify" on the results page);
+ * `compact` drops the Flight/Hotels/… tabs and the card chrome.
+ */
+export function SearchConsole({
+  initial,
+  compact = false,
+  resultsPath = "/flights",
+}: {
+  initial?: FlightSearch;
+  compact?: boolean;
+  /** Where "Search flights" goes (the dashboard has its own results page). */
+  resultsPath?: string;
+}) {
   const router = useRouter();
   const [tab, setTab] = useState("flight");
-  const [trip, setTrip] = useState<Trip>("oneway");
-  const [from, setFrom] = useState<Airport | null>(null);
-  const [to, setTo] = useState<Airport | null>(null);
-  const [depart, setDepart] = useState("");
-  const [ret, setRet] = useState("");
-  const [pax, setPax] = useState<Pax>({ adults: 1, children: 0, infants: 0 });
-  const [cabin, setCabin] = useState("economy");
-  const [legs, setLegs] = useState<Leg[]>([
-    { id: 1, from: null, to: null, date: "" },
-    { id: 2, from: null, to: null, date: "" },
-  ]);
+  const [trip, setTrip] = useState<Trip>(initial?.trip ?? "oneway");
+  const [from, setFrom] = useState<Airport | null>(airport(initial?.legs[0]?.from));
+  const [to, setTo] = useState<Airport | null>(airport(initial?.legs[0]?.to));
+  const [depart, setDepart] = useState(initial?.legs[0]?.date ?? "");
+  const [ret, setRet] = useState(initial?.trip === "round" ? (initial.legs[1]?.date ?? "") : "");
+  const [pax, setPax] = useState<Pax>(initial?.pax ?? { adults: 1, children: 0, infants: 0 });
+  const [cabin, setCabin] = useState<string>(initial?.cabin ?? "economy");
+  const [legs, setLegs] = useState<Leg[]>(
+    initial?.trip === "multi"
+      ? initial.legs.map((l, i) => ({ id: i + 1, from: airport(l.from), to: airport(l.to), date: l.date }))
+      : [
+          { id: 1, from: null, to: null, date: "" },
+          { id: 2, from: null, to: null, date: "" },
+        ],
+  );
   const [error, setError] = useState("");
   const [minDate, setMinDate] = useState<string>();
 
@@ -137,38 +159,42 @@ export function SearchConsole() {
       if (trip === "round") params.set("return", ret);
     }
     setError("");
-    router.push(`/flights?${params.toString()}`);
+    const parsed = parseSearch(params);
+    if (parsed) rememberSearch(parsed);
+    router.push(`${resultsPath}?${params.toString()}`);
   };
 
   const o = other[tab];
 
   return (
-    <div className="rounded-2xl border border-[#e5e9f0] bg-white shadow-[0_20px_50px_rgba(10,22,40,0.18)]">
-      <div
-        role="tablist"
-        aria-label="Search type"
-        className="no-scrollbar flex items-end overflow-x-auto rounded-t-2xl border-b border-[#e2e8f0] bg-[#f4f6f9] px-3 pt-2"
-      >
-        {tabs.map((t) => {
-          const on = t.id === tab;
-          return (
-            <button
-              key={t.id}
-              role="tab"
-              type="button"
-              aria-selected={on}
-              onClick={() => setTab(t.id)}
-              className={cn(
-                "flex items-center gap-2 whitespace-nowrap rounded-t-[10px] px-[18px] py-3 text-sm leading-[14px] transition-colors",
-                on ? "bg-white font-bold text-blue" : "font-semibold text-[#64748b] hover:text-blue",
-              )}
-            >
-              {t.label}
-              {t.icon}
-            </button>
-          );
-        })}
-      </div>
+    <div className={cn("rounded-2xl bg-white", !compact && "border border-[#e5e9f0] shadow-[0_20px_50px_rgba(10,22,40,0.18)]")}>
+      {!compact && (
+        <div
+          role="tablist"
+          aria-label="Search type"
+          className="no-scrollbar flex items-end overflow-x-auto rounded-t-2xl border-b border-[#e2e8f0] bg-[#f4f6f9] px-3 pt-2"
+        >
+          {tabs.map((t) => {
+            const on = t.id === tab;
+            return (
+              <button
+                key={t.id}
+                role="tab"
+                type="button"
+                aria-selected={on}
+                onClick={() => setTab(t.id)}
+                className={cn(
+                  "flex items-center gap-2 whitespace-nowrap rounded-t-[10px] px-[18px] py-3 text-sm leading-[14px] transition-colors",
+                  on ? "bg-white font-bold text-blue" : "font-semibold text-[#64748b] hover:text-blue",
+                )}
+              >
+                {t.label}
+                {t.icon}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {tab !== "flight" ? (
         <div className="flex flex-col items-start justify-between gap-4 px-6 pb-6 pt-5 sm:flex-row sm:items-center">

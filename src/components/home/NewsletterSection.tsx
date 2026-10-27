@@ -45,7 +45,7 @@ export function NewsletterSection() {
       <div aria-hidden className="absolute -left-[224px] -top-[180px] size-[500px] rounded-full bg-[rgba(2,144,222,0.08)]" />
       <div aria-hidden className="absolute -bottom-[180px] -right-[80px] size-[380px] rounded-full bg-[rgba(18,35,61,0.04)]" />
       <Container className="relative grid items-center gap-11 lg:grid-cols-2">
-        <div>
+        <div data-reveal="left">
           <span className="block text-[11px] font-bold uppercase leading-[16.5px] tracking-[0.13em] text-[#087dcc]">Free Newsletter</span>
           <h2 id="newsletter-title" className="mt-[19px] max-w-[594px] text-[28px] font-extrabold leading-[1.2] text-[#12233d] md:text-[34px]">
             Get Free Nigeria Flight Deal Alerts{" "}
@@ -67,7 +67,7 @@ export function NewsletterSection() {
           </dl>
         </div>
 
-        <div className="rounded-2xl border-[0.83px] border-[#dce8f3] bg-white p-[30px] shadow-[0_14px_36px_rgba(18,35,61,0.1)]">
+        <div data-reveal="right" className="rounded-2xl border-[0.83px] border-[#dce8f3] bg-white p-[30px] shadow-[0_14px_36px_rgba(18,35,61,0.1)]">
           <h3 className="text-xl font-extrabold text-[#0a1f44]">Subscribe for free</h3>
           <p className="mt-1 text-[13px] leading-[19.5px] text-[#5a5a5a]">No spam. Unsubscribe anytime.</p>
           {status === "done" ? (
