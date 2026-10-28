@@ -126,12 +126,13 @@ function NameForm() {
 }
 
 function DetailsForm({ today }: { today: string }) {
-  const f = useSliceForm(["email", "country", "phone", "dob", "gender", "nationality", "passportNumber", "passportExpiry", "passportCountry"]);
+  const f = useSliceForm(["email", "country", "phone", "dob", "gender", "nationality", "passportNumber", "passportIssued", "passportExpiry", "passportCountry"]);
   const dial = getCountry(f.values.country)?.dial ?? "+234";
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     const local: Errors = {};
     if (f.values.passportNumber && !/^[A-Za-z0-9]{6,9}$/.test(f.values.passportNumber)) local.passportNumber = "Enter a valid passport number";
+    if (f.values.passportIssued && f.values.passportIssued > today) local.passportIssued = "Issuing date can't be in the future";
     if (f.values.passportExpiry && f.values.passportExpiry <= today) local.passportExpiry = "Passport expiry must be a future date";
     if (Object.keys(local).length) return f.setErrors(local);
     f.setSaving(true);
@@ -186,10 +187,26 @@ function DetailsForm({ today }: { today: string }) {
         </div>
 
         <h3 className="mb-3 mt-6 text-sm font-bold text-ink-900">Saved passport</h3>
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <Field label="Passport number" htmlFor="det-pp" error={f.errors.passportNumber}>
             <input id="det-pp" value={f.values.passportNumber} onChange={(e) => f.set({ passportNumber: e.target.value })} placeholder="E.g. A1234567" className={cn(inputCls, "uppercase", f.errors.passportNumber && "border-error")} />
           </Field>
+          <div>
+            <DatePicker
+              name="det-ppiss"
+              title="Issuing date"
+              value={f.values.passportIssued}
+              max={today || undefined}
+              format="dmy"
+              jump
+              placeholder="DD / MMM / YYYY"
+              invalid={!!f.errors.passportIssued}
+              onChange={(v) => f.set({ passportIssued: v })}
+              labelClassName={labelCls}
+              fieldClassName={dateField}
+            />
+            {f.errors.passportIssued && <p className="mt-1 text-xs font-medium text-error">{f.errors.passportIssued}</p>}
+          </div>
           <div>
             <DatePicker
               name="det-ppexp"

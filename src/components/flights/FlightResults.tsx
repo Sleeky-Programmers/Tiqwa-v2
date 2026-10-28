@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { SlidersHorizontal } from "lucide-react";
 import { SearchConsole } from "@/components/home/search/SearchConsole";
 import { Modal } from "@/components/ui/Modal";
+import { bookingRoutes } from "@/lib/booking/routes";
 import { saveBooking } from "@/lib/booking/store";
 import { parseSearch } from "@/lib/flights/search-params";
 import type { FlightOffer, SearchResponse } from "@/lib/flights/types";
@@ -58,10 +59,11 @@ function applyFilters(offers: FlightOffer[], f: Filters) {
   });
 }
 
-/** `variant="dashboard"` renders inside the account shell and keeps searches under /dashboard/flights/results. */
+/** `variant="dashboard"` renders inside the account shell and keeps searching and booking under /dashboard/flights. */
 export function FlightResults({ variant = "site" }: { variant?: "site" | "dashboard" }) {
   const dash = variant === "dashboard";
-  const resultsPath = dash ? "/dashboard/flights/results" : "/flights";
+  const routes = bookingRoutes(variant);
+  const resultsPath = routes.results;
   const router = useRouter();
   const params = useSearchParams();
   const query = params.toString();
@@ -124,7 +126,7 @@ export function FlightResults({ variant = "site" }: { variant?: "site" | "dashbo
     if (!search) return;
     saveBooking({ search, offer });
     setDetails(null);
-    router.push("/checkout");
+    router.push(routes.checkout);
   };
 
   if (!search) return <InvalidSearch dash={dash} resultsPath={resultsPath} />;

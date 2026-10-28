@@ -13,6 +13,7 @@ import { bankTransfer } from "@/data/booking";
 import { contact } from "@/data/contact";
 import { getCountry } from "@/data/countries";
 import { bookingTotals } from "@/lib/booking/pricing";
+import { bookingRoutes, type BookingVariant } from "@/lib/booking/routes";
 import { loadBooking, type BookingDraft } from "@/lib/booking/store";
 import { cabinLabel, fmtDuration, fmtLongDate, fmtTime, naira } from "@/lib/flights/format";
 import { cn } from "@/lib/utils";
@@ -30,7 +31,9 @@ function Block({ title, children, className }: { title: string; children: ReactN
 }
 
 /** Booking confirmation (tbils.com /booking-success), driven by the booking kept in sessionStorage. */
-export function BookingSuccess() {
+export function BookingSuccess({ variant = "site" }: { variant?: BookingVariant }) {
+  const dash = variant === "dashboard";
+  const routes = bookingRoutes(variant);
   const router = useRouter();
   const [draft, setDraft] = useState<BookingDraft | null | undefined>(undefined);
 
@@ -39,15 +42,15 @@ export function BookingSuccess() {
     setDraft(loadBooking());
   }, []);
 
-  if (draft === undefined) return <InlineLoader message="Loading your booking..." className="min-h-screen" />;
+  if (draft === undefined) return <InlineLoader message="Loading your booking..." className={dash ? "py-24" : "min-h-screen"} />;
   if (!draft?.payment || !draft.reservation) {
     return (
-      <div className="min-h-screen bg-[#f4f6f9]">
-        <ItineraryBand search={null} actionLabel="" onAction={() => {}} />
+      <div className={cn("bg-[#f4f6f9]", !dash && "min-h-screen")}>
+        <ItineraryBand embedded={dash} search={null} actionLabel="" onAction={() => {}} />
         <div className="mx-auto max-w-[560px] px-4 py-16 text-center">
           <h1 className="font-display text-2xl font-extrabold text-ink-900">No booking to show</h1>
           <p className="mt-2 text-sm text-ink-500">Complete a booking to see its confirmation here.</p>
-          <Link href="/" className="mt-6 inline-block rounded-xl bg-[linear-gradient(90deg,#0290de,#014e78)] px-7 py-3 text-sm font-bold text-white">
+          <Link href={routes.search} className="mt-6 inline-block rounded-xl bg-[linear-gradient(90deg,#0290de,#014e78)] px-7 py-3 text-sm font-bold text-white">
             Search flights
           </Link>
         </div>
@@ -77,12 +80,12 @@ export function BookingSuccess() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#f4f6f9] pb-14 print:bg-white">
+    <div className={cn("bg-[#f4f6f9] print:bg-white", dash ? "" : "min-h-screen pb-14")}>
       <div className="print:hidden">
-        <ItineraryBand search={draft.search} actionLabel="New search" onAction={() => router.push("/")} />
+        <ItineraryBand embedded={dash} search={draft.search} actionLabel="New search" onAction={() => router.push(routes.search)} />
       </div>
 
-      <div className="mx-auto max-w-[960px] space-y-5 px-4 pt-8">
+      <div className={cn("mx-auto max-w-[960px] space-y-5 pt-8", !dash && "px-4")}>
         <section className={cn(card, "px-6 py-8 text-center animate-[rise-in_0.45s_cubic-bezier(0.16,1,0.3,1)]")}>
           <span
             className={cn(

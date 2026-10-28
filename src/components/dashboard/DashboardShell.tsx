@@ -30,7 +30,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-[#f4f6f9]">
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[264px] border-r border-[#eef1f5] lg:block">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[264px] border-r border-[#eef1f5] lg:block print:hidden">
         <Sidebar />
       </aside>
 
@@ -63,7 +63,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
         <Sidebar onNavigate={() => setDrawer(false)} />
       </div>
 
-      <div className="lg:pl-[264px]">
+      <div className="lg:pl-[264px] print:pl-0">
         <Topbar onMenu={() => setDrawer(true)} />
         <main id="main" className="mx-auto max-w-[1280px] px-4 py-6 sm:px-6 lg:py-8">
           {children}
