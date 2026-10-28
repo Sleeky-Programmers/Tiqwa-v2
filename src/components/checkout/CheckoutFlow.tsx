@@ -6,9 +6,11 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { ItineraryBand } from "@/components/flights/ItineraryBand";
 import { AlertDialog, InlineLoader, ProcessingOverlay } from "@/components/ui/Feedback";
+import { fullName, getProfile, initials, useProfile } from "@/lib/account";
 import { recordBooking } from "@/lib/booking/history";
 import { loadBooking, saveBooking, type BookingDraft, type Traveller } from "@/lib/booking/store";
 import { bookingTotals } from "@/lib/booking/pricing";
+import { bookingRoutes, travellerFromProfile, type BookingVariant } from "@/lib/booking/routes";
 import { paxCount } from "@/lib/flights/format";
 import { searchToParams } from "@/lib/flights/search-params";
 import { cn } from "@/lib/utils";
@@ -79,7 +81,10 @@ function AccordionSection({
   );
 }
 
-export function CheckoutFlow() {
+/** `variant="dashboard"` runs the same flow inside the account shell, starting from the signed-in user's details. */
+export function CheckoutFlow({ variant = "site" }: { variant?: BookingVariant }) {
+  const dash = variant === "dashboard";
+  const routes = bookingRoutes(variant);
   const router = useRouter();
   const [phase, setPhase] = useState<"validating" | "ready" | "missing">("validating");
   const [draft, setDraft] = useState<BookingDraft | null>(null);
@@ -110,7 +115,10 @@ export function CheckoutFlow() {
     const list = d.travellers
       ? d.travellers.map((t) => ({ ...emptyTraveller(t.type), ...t }))
       : [
-          ...Array.from({ length: adults }, () => emptyTraveller("adult")),
+          // Signed in: the account holder is the lead passenger until they switch it off.
+          ...Array.from({ length: adults }, (_, i) =>
+            dash && i === 0 ? { ...emptyTraveller("adult"), ...travellerFromProfile(getProfile()) } : emptyTraveller("adult"),
+          ),
           ...Array.from({ length: children }, () => emptyTraveller("child")),
           // Each infant starts on its matching adult's lap (infants never outnumber adults).
           ...Array.from({ length: infants }, (_, i) => ({ ...emptyTraveller("infant"), guardian: String(i) })),
@@ -122,7 +130,7 @@ export function CheckoutFlow() {
     /* eslint-enable react-hooks/set-state-in-effect */
     const t = window.setTimeout(() => setPhase("ready"), 1200);
     return () => window.clearTimeout(t);
-  }, []);
+  }, [dash]);
 
   const scrollTo = (s: Section) => window.setTimeout(() => sections.current[s]?.scrollIntoView({ behavior: "smooth", block: "start" }), 60);
 
@@ -135,7 +143,7 @@ export function CheckoutFlow() {
     });
   };
 
-  if (phase === "missing") return <MissingBooking />;
+  if (phase === "missing") return <MissingBooking dash={dash} searchHref={routes.search} />;
 
   const search = draft?.search ?? null;
   const international = !!draft?.offer.journeys.some((j) => j.segments.some((s) => s.from.country !== "Nigeria" || s.to.country !== "Nigeria"));
@@ -215,7 +223,7 @@ export function CheckoutFlow() {
             title: "This fare is no longer available",
             message: json.error.message,
             actionLabel: "Search again",
-            onAction: () => router.push(`/flights?${searchToParams(draft.search)}`),
+            onAction: () => router.push(`${routes.results}?${searchToParams(draft.search)}`),
           });
         } else setAlert({ title: "Couldn't reserve this booking", message: json?.error?.message ?? "Please try again." });
         return;
@@ -257,42 +265,52 @@ export function CheckoutFlow() {
       };
       saveBooking(final);
       recordBooking(final);
-      router.push(`/booking-success?payment_method=${method}${method === "hold" ? "&status=reserved" : ""}`);
+      router.push(`${routes.success}?payment_method=${method}${method === "hold" ? "&status=reserved" : ""}`);
     } catch (e) {
       setBusy(null);
       setAlert({ title: "Payment verification failed", message: e instanceof Error && e.message ? e.message : "Failed to verify payment. Please try again." });
     }
   };
 
-  const changeSearch = () => search && router.push(`/flights?${searchToParams(search)}`);
+  const changeSearch = () => search && router.push(`${routes.results}?${searchToParams(search)}`);
+
+  const setLead = (patch: Partial<Traveller>) => {
+    setTravellers((list) => list.map((x, j) => (j === 0 ? { ...x, ...patch } : x)));
+    setErrors((list) => list.map((x, j) => (j === 0 ? {} : x)));
+    setShowPassport((s) => s.map((v, j) => (j === 0 ? !!patch.passportNumber : v)));
+  };
 
   return (
-    <div className="min-h-screen bg-[#f4f6f9] pb-12">
+    <div className={cn("bg-[#f4f6f9]", !dash && "min-h-screen pb-12")}>
       <ItineraryBand
+        embedded={dash}
         search={search}
         actionLabel="Change"
         onAction={changeSearch}
+        // In the dashboard the top bar owns Back and the page title; the band keeps the trip summary + Change.
         before={
-          <div className="mb-[18px] flex items-center gap-4">
-            <button
-              type="button"
-              onClick={changeSearch}
-              className="flex items-center gap-2 rounded-full border border-white/[0.24] bg-white/[0.14] px-4 py-[9px] text-sm font-semibold text-white transition hover:bg-white/[0.22]"
-            >
-              <ArrowLeft className="size-4" /> Go Back
-            </button>
-            <span className="text-2xl font-bold tracking-[-0.01em] text-white" aria-live="polite">
-              {STEP_TITLE[open]}
-            </span>
-          </div>
+          !dash && (
+            <div className="mb-[18px] flex items-center gap-4">
+              <button
+                type="button"
+                onClick={changeSearch}
+                className="flex items-center gap-2 rounded-full border border-white/[0.24] bg-white/[0.14] px-4 py-[9px] text-sm font-semibold text-white transition hover:bg-white/[0.22]"
+              >
+                <ArrowLeft className="size-4" /> Go Back
+              </button>
+              <span className="text-2xl font-bold tracking-[-0.01em] text-white" aria-live="polite">
+                {STEP_TITLE[open]}
+              </span>
+            </div>
+          )
         }
       />
 
-      <div className="mx-auto max-w-[1440px] px-4 pt-[30px] sm:px-6">
+      <div className={cn("mx-auto max-w-[1440px]", dash ? "pt-6" : "px-4 pt-[30px] sm:px-6")}>
         {phase === "validating" || !draft ? (
           <InlineLoader message="Validating flight details..." />
         ) : (
-          <div className="grid items-start gap-4 lg:grid-cols-[1fr_384px]">
+          <div className={cn("grid items-start gap-4", dash ? "xl:grid-cols-[1fr_360px]" : "lg:grid-cols-[1fr_384px]")}>
             <main className="min-w-0 space-y-4">
               <AccordionSection
                 step={1}
@@ -312,6 +330,13 @@ export function CheckoutFlow() {
                     active={activeTraveller}
                     onSelect={setActiveTraveller}
                     panelId="traveller-panel"
+                  />
+                )}
+                {dash && activeTraveller === 0 && travellers[0] && (
+                  <AccountLead
+                    lead={travellers[0]}
+                    onUseMine={() => setLead(travellerFromProfile(getProfile()))}
+                    onSomeoneElse={() => setLead({ ...emptyTraveller("adult"), type: "adult" })}
                   />
                 )}
                 {travellers[activeTraveller] && (
@@ -441,7 +466,7 @@ export function CheckoutFlow() {
               </AccordionSection>
             </main>
 
-            <aside className="lg:sticky lg:top-[86px]">
+            <aside className={dash ? "xl:sticky xl:top-[80px]" : "lg:sticky lg:top-[86px]"}>
               <BookingSummary draft={draft} locked={!!draft.reservation} onPromo={(promo) => persist({ promo })} />
             </aside>
           </div>
@@ -464,14 +489,42 @@ export function CheckoutFlow() {
   );
 }
 
-function MissingBooking() {
+/** Signed-in banner above the lead traveller: who is booking, and whether their own details are used. */
+function AccountLead({ lead, onUseMine, onSomeoneElse }: { lead: Traveller; onUseMine: () => void; onSomeoneElse: () => void }) {
+  const user = useProfile();
+  const isMe = lead.firstName === user.firstName && lead.surname === user.surname && lead.email === user.email;
   return (
-    <div className="min-h-screen bg-[#f4f6f9] pb-12">
-      <ItineraryBand search={null} actionLabel="" onAction={() => {}} />
+    <div className="mb-5 flex flex-wrap items-center gap-3 rounded-xl border border-[#d6ebfa] bg-[linear-gradient(90deg,rgba(2,144,222,0.08),rgba(2,144,222,0.02))] px-4 py-3 animate-[fade-in_0.3s_ease]">
+      <span className="grid size-10 shrink-0 place-items-center rounded-full bg-[linear-gradient(135deg,#0290de,#013557)] text-sm font-bold text-white">
+        {initials(user)}
+      </span>
+      <div className="min-w-[200px] flex-1">
+        <p className="truncate text-sm font-bold text-ink-900">Booking as {fullName(user)}</p>
+        <p className="text-xs text-ink-500">
+          {isMe
+            ? "We've filled in your profile details as the lead traveller. Check them before you continue."
+            : `Enter the lead traveller's details. Your booking still appears in your account (${user.email}).`}
+        </p>
+      </div>
+      <button
+        type="button"
+        onClick={isMe ? onSomeoneElse : onUseMine}
+        className="press rounded-lg border border-blue bg-white px-3.5 py-2 text-[13px] max-sm:w-full font-bold text-blue transition hover:bg-sky-50"
+      >
+        {isMe ? "Booking for someone else?" : "Use my details"}
+      </button>
+    </div>
+  );
+}
+
+function MissingBooking({ dash, searchHref }: { dash: boolean; searchHref: string }) {
+  return (
+    <div className={cn("bg-[#f4f6f9]", !dash && "min-h-screen pb-12")}>
+      <ItineraryBand embedded={dash} search={null} actionLabel="" onAction={() => {}} />
       <div className="mx-auto max-w-[560px] px-4 py-16 text-center animate-[fade-up_0.35s_ease]">
         <h1 className="font-display text-2xl font-extrabold text-ink-900">Your booking session has expired</h1>
         <p className="mt-2 text-sm text-ink-500">Search again and pick a flight to continue to checkout.</p>
-        <Link href="/" className="mt-6 inline-block rounded-xl bg-[linear-gradient(90deg,#0290de,#014e78)] px-7 py-3 text-sm font-bold text-white">
+        <Link href={searchHref} className="mt-6 inline-block rounded-xl bg-[linear-gradient(90deg,#0290de,#014e78)] px-7 py-3 text-sm font-bold text-white">
           Search flights
         </Link>
       </div>

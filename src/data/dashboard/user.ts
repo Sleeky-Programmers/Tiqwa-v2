@@ -12,6 +12,7 @@ export type UserProfile = {
   gender: string;
   nationality: string; // ISO2
   passportNumber: string;
+  passportIssued: string;
   passportExpiry: string;
   passportCountry: string; // ISO2
   memberSince: string;
@@ -31,6 +32,7 @@ export const demoUser: UserProfile = {
   gender: "Male",
   nationality: "NG",
   passportNumber: "A0000000",
+  passportIssued: "2021-03-15",
   passportExpiry: "2031-03-14",
   passportCountry: "NG",
   memberSince: "2023-02-11",

@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
-import { Bell, ChevronDown, Globe, LogOut, Menu, Plane, UserRound } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ArrowLeft, Bell, ChevronDown, Globe, LogOut, Menu, Plane, UserRound } from "lucide-react";
 import { useOutsideClose } from "@/components/home/search/shared";
 import { notifications } from "@/data/dashboard/user";
 import { fullName, initials, useProfile } from "@/lib/account";
+import { loadBooking } from "@/lib/booking/store";
+import { searchToParams } from "@/lib/flights/search-params";
 import { cn } from "@/lib/utils";
 import { pageMeta } from "./nav";
 
@@ -16,7 +18,17 @@ const menuCls =
 /** Sticky top bar: hamburger (mobile), page title + breadcrumb, Book a flight, notifications, account menu. */
 export function Topbar({ onMenu }: { onMenu: () => void }) {
   const path = usePathname();
-  const { title, crumbs } = pageMeta(path);
+  const [resultsHref, setResultsHref] = useState<string>();
+  const { title, crumbs, back } = pageMeta(path, resultsHref);
+  // Already inside the booking flow, so the "Book a flight" shortcut would only abandon it.
+  const inFlights = path.startsWith("/dashboard/flights");
+
+  // Point "Results" back at the search the current booking came from (kept in sessionStorage).
+  useEffect(() => {
+    const draft = loadBooking();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- sessionStorage is client-only
+    setResultsHref(draft ? `/dashboard/flights/results?${searchToParams(draft.search)}` : undefined);
+  }, [path]);
   const user = useProfile();
   const [open, setOpen] = useState<"notes" | "account" | null>(null);
   const [read, setRead] = useState(false);
@@ -25,7 +37,7 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
   const unread = read ? 0 : notifications.filter((n) => n.unread).length;
 
   return (
-    <header className="sticky top-0 z-40 flex h-16 items-center gap-3 border-b border-[#eef1f5] bg-white/95 px-4 backdrop-blur sm:px-6">
+    <header className="sticky top-0 z-40 flex h-16 items-center gap-3 border-b border-[#eef1f5] bg-white/95 px-4 backdrop-blur sm:px-6 print:hidden">
       <button
         type="button"
         onClick={onMenu}
@@ -35,13 +47,24 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
         <Menu className="size-5" />
       </button>
 
+      {back && (
+        <Link
+          href={back.href}
+          aria-label={back.label}
+          title={back.label}
+          className="press flex size-10 shrink-0 items-center justify-center rounded-full border border-[#e4e8ee] text-ink-900 transition hover:border-blue hover:text-blue"
+        >
+          <ArrowLeft className="size-5" />
+        </Link>
+      )}
+
       <div className="min-w-0 flex-1">
         <nav aria-label="Breadcrumb" className="hidden text-xs text-ink-400 sm:block">
           <Link href="/dashboard" className="hover:text-blue">
             Account
           </Link>
-          {crumbs.map((c) => (
-            <span key={c.label}>
+          {crumbs.map((c, i) => (
+            <span key={c.label} aria-current={i === crumbs.length - 1 ? "page" : undefined}>
               <span className="mx-1.5">/</span>
               {c.href ? (
                 <Link href={c.href} className="hover:text-blue">
@@ -58,7 +81,7 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
 
       <Link
         href="/dashboard/flights"
-        className="hidden items-center gap-2 rounded-[10px] bg-orange px-4 py-2.5 text-sm font-bold text-white shadow-[0_1px_2px_rgba(74,34,4,0.2)] transition hover:bg-orange-600 md:flex"
+        className={cn(inFlights ? "hidden" : "hidden md:flex", "items-center gap-2 rounded-[10px] bg-orange px-4 py-2.5 text-sm font-bold text-white shadow-[0_1px_2px_rgba(74,34,4,0.2)] transition hover:bg-orange-600")}
       >
         <Plane className="size-4" /> Book a flight
       </Link>

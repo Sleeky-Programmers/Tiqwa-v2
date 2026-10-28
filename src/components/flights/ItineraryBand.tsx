@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { Header } from "@/components/layout/Header";
 import { cn } from "@/lib/utils";
@@ -33,6 +34,9 @@ export function ItineraryBand({
   /** Inside the dashboard: no site header, rounded card instead of a full-bleed band. */
   embedded?: boolean;
 }) {
+  // The public site header never renders inside the signed-in dashboard, whatever the caller passes.
+  const inDashboard = usePathname().startsWith("/dashboard");
+  embedded ||= inDashboard;
   return (
     <div
       className={cn(
