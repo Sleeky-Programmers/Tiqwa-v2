@@ -3,7 +3,9 @@ import { cabinLabel, dayDiff, fmtDuration, fmtTime, naira, stopsLabel, timeOfDay
 import type { FlightOffer, Journey } from "@/lib/flights/types";
 import { cn } from "@/lib/utils";
 
-export const airlineLogo = (code: string) => `/images/airlines/${code}.png`;
+// Logos bundled with the site; any other carrier (live search results) loads from the Tiqwa CDN.
+const LOCAL_LOGOS = new Set("AA AC AF AT AW BA DL EK ET EY KL KQ LH LX MS P4 QI QR SA SN TK UA VK VS W3 WB WN".split(" "));
+export const airlineLogo = (code: string) => (LOCAL_LOGOS.has(code) ? `/images/airlines/${code}.png` : `https://image.tiqwa.com/airlines/${code}.png`);
 
 const todDot = {
   dawn: "bg-[#f5a623] shadow-[0_0_0_3px_rgba(245,166,35,0.16)]",
@@ -80,7 +82,7 @@ export function FlightCard({
         <button
           type="button"
           onClick={onViewDetails}
-          className="min-w-[140px] flex-1 rounded-xl bg-[linear-gradient(90deg,#0290de,#014e78)] px-4 py-2.5 text-sm font-semibold text-white transition hover:-translate-y-px hover:bg-[linear-gradient(90.41deg,#0077f7_0.35%,#004691_106.01%)] md:w-full md:flex-none"
+          className="press min-w-[140px] flex-1 rounded-xl bg-[linear-gradient(90deg,#0290de,#014e78)] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[linear-gradient(90.41deg,#0077f7_0.35%,#004691_106.01%)] md:w-full md:flex-none"
         >
           View Details
         </button>

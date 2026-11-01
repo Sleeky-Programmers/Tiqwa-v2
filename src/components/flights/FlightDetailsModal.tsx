@@ -152,7 +152,7 @@ export function FlightDetailsModal({
                     ["Cabin", cabinLabel[offer.cabin]],
                     ["Refundable", offer.fareRules.refundNote],
                     ["Changes", offer.fareRules.changeNote],
-                    ["Seats left", `${offer.seatsLeft} at this price`],
+                    ...(offer.seatsLeft ? [["Seats left", `${offer.seatsLeft} at this price`]] : []),
                   ].map(([k, v]) => (
                     <div key={k} className={ruleRow}>
                       <span className="text-xs font-semibold uppercase tracking-[0.05em] text-ink-500">{k}</span>
@@ -160,6 +160,19 @@ export function FlightDetailsModal({
                     </div>
                   ))}
                 </div>
+                {offer.fareRules.notes && (
+                  <>
+                    <h4 className="mt-6 text-sm font-bold text-ink-900">Airline conditions</h4>
+                    <ul className="mt-2 space-y-2">
+                      {offer.fareRules.notes.map((n) => (
+                        <li key={n} className="flex gap-2.5 text-sm leading-[1.5] text-[#374151]">
+                          <span aria-hidden className="mt-[7px] size-1.5 shrink-0 rounded-full bg-blue" />
+                          {n}
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                )}
               </div>
             )}
           </div>

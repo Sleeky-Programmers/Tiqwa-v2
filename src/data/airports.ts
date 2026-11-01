@@ -1,4 +1,5 @@
-// MOCK airport data. Served through /api/airports until a real search API is connected.
+// Airport list used offline (mock mode) and to label codes instantly. With a backend configured,
+// /api/airports searches the live airport database instead and the client remembers what it sees.
 
 export type Airport = { code: string; city: string; name: string; country: string };
 
@@ -88,7 +89,39 @@ export const airports: Airport[] = [
 /** Shown when the box is opened before the user has typed 2 letters. */
 export const popularAirportCodes = ["LOS", "ABV", "LHR", "JFK", "CDG", "DXB", "YYZ", "SYD"];
 
-export const getAirport = (code: string) => airports.find((a) => a.code === code);
+// Airports learned from live searches (codes outside the list above), kept so a code in a URL still
+// shows its city. Read lazily on the client only.
+const LEARNED_KEY = "tbils.airports";
+let learned: Map<string, Airport> | null = null;
+function learnedMap() {
+  if (learned) return learned;
+  learned = new Map();
+  if (typeof window === "undefined") return learned;
+  try {
+    for (const a of JSON.parse(localStorage.getItem(LEARNED_KEY) ?? "[]") as Airport[]) learned.set(a.code, a);
+  } catch {}
+  return learned;
+}
+
+export function rememberAirports(list: Airport[]) {
+  if (typeof window === "undefined" || !list.length) return;
+  const map = learnedMap();
+  let changed = false;
+  for (const a of list) {
+    if (!a.code || airports.some((x) => x.code === a.code)) continue;
+    const prev = map.get(a.code);
+    if (!prev || prev.city !== a.city) {
+      map.set(a.code, a);
+      changed = true;
+    }
+  }
+  if (!changed) return;
+  try {
+    localStorage.setItem(LEARNED_KEY, JSON.stringify([...map.values()].slice(-400)));
+  } catch {}
+}
+
+export const getAirport = (code: string) => airports.find((a) => a.code === code) ?? learnedMap().get(code);
 
 /** Rank: Nigerian city-prefix matches first, then city prefix, code, name/country contains. */
 export const searchAirports = (q: string, limit = 25): Airport[] => {

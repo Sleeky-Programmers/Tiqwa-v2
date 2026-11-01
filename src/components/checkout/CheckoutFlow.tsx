@@ -6,7 +6,8 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { ItineraryBand } from "@/components/flights/ItineraryBand";
 import { AlertDialog, InlineLoader, ProcessingOverlay } from "@/components/ui/Feedback";
-import { fullName, getProfile, initials, useProfile } from "@/lib/account";
+import type { ConfirmPrice } from "@/app/api/checkout/confirm-price/route";
+import { fullName, getProfile, initials, loadProfile, useProfile } from "@/lib/account";
 import { recordBooking } from "@/lib/booking/history";
 import { loadBooking, saveBooking, type BookingDraft, type Traveller } from "@/lib/booking/store";
 import { bookingTotals } from "@/lib/booking/pricing";
@@ -16,7 +17,7 @@ import { searchToParams } from "@/lib/flights/search-params";
 import { cn } from "@/lib/utils";
 import { AddonsStep } from "./AddonsStep";
 import { BookingSummary } from "./BookingSummary";
-import { PaymentStep, type PayMethod } from "./PaymentStep";
+import { PaymentStep, type LiveChoice, type PayMethod } from "./PaymentStep";
 import { TravellerForm, emptyTraveller, typeInfo, validateTraveller, type TravellerErrors } from "./TravellerForm";
 import { TravellerSwitcher, type TravellerStatus } from "./TravellerSwitcher";
 
@@ -115,10 +116,7 @@ export function CheckoutFlow({ variant = "site" }: { variant?: BookingVariant })
     const list = d.travellers
       ? d.travellers.map((t) => ({ ...emptyTraveller(t.type), ...t }))
       : [
-          // Signed in: the account holder is the lead passenger until they switch it off.
-          ...Array.from({ length: adults }, (_, i) =>
-            dash && i === 0 ? { ...emptyTraveller("adult"), ...travellerFromProfile(getProfile()) } : emptyTraveller("adult"),
-          ),
+          ...Array.from({ length: adults }, () => emptyTraveller("adult")),
           ...Array.from({ length: children }, () => emptyTraveller("child")),
           // Each infant starts on its matching adult's lap (infants never outnumber adults).
           ...Array.from({ length: infants }, (_, i) => ({ ...emptyTraveller("infant"), guardian: String(i) })),
@@ -128,9 +126,54 @@ export function CheckoutFlow({ variant = "site" }: { variant?: BookingVariant })
     setErrors(list.map(() => ({})));
     setShowPassport(list.map((t) => !!t.passportNumber));
     /* eslint-enable react-hooks/set-state-in-effect */
-    const t = window.setTimeout(() => setPhase("ready"), 1200);
-    return () => window.clearTimeout(t);
-  }, [dash]);
+    let cancelled = false;
+
+    // Signed in: the account holder is the lead passenger until they switch it off.
+    if (dash && !d.travellers) {
+      loadProfile().then((p) => {
+        if (cancelled || !p.email) return;
+        setTravellers((l) => l.map((t, i) => (i === 0 && !t.firstName ? { ...t, ...travellerFromProfile(p) } : t)));
+        setShowPassport((s) => s.map((v, i) => (i === 0 ? v || !!p.passportNumber : v)));
+      });
+    }
+
+    // Re-check the fare with the airline before the traveller asks to pay (price, seats, documents).
+    (async () => {
+      try {
+        const res = await fetch(`/api/checkout/confirm-price?id=${encodeURIComponent(d.offer.id)}&cabin=${d.offer.cabin}`);
+        const json = await res.json().catch(() => null);
+        if (cancelled) return;
+        if (!res.ok) {
+          if (json?.error?.code === "FARE_UNAVAILABLE") {
+            setAlert({
+              title: "This fare is no longer available",
+              message: json.error.message,
+              actionLabel: "Search again",
+              onAction: () => router.push(`${routes.results}?${searchToParams(d.search)}`),
+            });
+          }
+          // Anything else: carry on with the searched price; the booking step re-checks it anyway.
+        } else {
+          const c = json as ConfirmPrice;
+          const offer = c.offer ?? (c.total && c.total !== d.offer.price.total ? { ...d.offer, price: { ...d.offer.price, total: c.total } } : d.offer);
+          const next: BookingDraft = {
+            ...d,
+            offer: c.seatsLeft ? { ...offer, seatsLeft: c.seatsLeft } : offer,
+            ...(c.documentRequired !== undefined ? { documentRequired: c.documentRequired } : {}),
+            priceChanged: c.priceChanged || offer.price.total !== d.offer.price.total,
+          };
+          saveBooking(next);
+          setDraft(next);
+        }
+      } catch {
+        // Offline: keep the searched fare; reserving will surface any problem.
+      }
+      if (!cancelled) setPhase("ready");
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [dash, router, routes.results]);
 
   const scrollTo = (s: Section) => window.setTimeout(() => sections.current[s]?.scrollIntoView({ behavior: "smooth", block: "start" }), 60);
 
@@ -146,7 +189,8 @@ export function CheckoutFlow({ variant = "site" }: { variant?: BookingVariant })
   if (phase === "missing") return <MissingBooking dash={dash} searchHref={routes.search} />;
 
   const search = draft?.search ?? null;
-  const international = !!draft?.offer.journeys.some((j) => j.segments.some((s) => s.from.country !== "Nigeria" || s.to.country !== "Nigeria"));
+  const international =
+    draft?.documentRequired ?? !!draft?.offer.journeys.some((j) => j.segments.some((s) => s.from.country !== "Nigeria" || s.to.country !== "Nigeria"));
   const counts = { adult: 0, child: 0, infant: 0 };
   const labels = travellers.map((t) => {
     counts[t.type] += 1;
@@ -198,9 +242,15 @@ export function CheckoutFlow({ variant = "site" }: { variant?: BookingVariant })
     persist({ travellers });
     setDone((d) => ({ ...d, travellers: true }));
     setOpen("addons");
-    setAddonsLoading(true);
-    window.setTimeout(() => setAddonsLoading(false), 800);
     scrollTo("addons");
+    if (!draft.addons) {
+      setAddonsLoading(true);
+      fetch("/api/addons")
+        .then((r) => r.json())
+        .then((j) => persist({ addons: Array.isArray(j?.addons) ? j.addons : [] }))
+        .catch(() => persist({ addons: [] }))
+        .finally(() => setAddonsLoading(false));
+    }
   };
 
   const reserve = async () => {
@@ -214,7 +264,7 @@ export function CheckoutFlow({ variant = "site" }: { variant?: BookingVariant })
       const res = await fetch("/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "reserve", offerId: draft.offer.id }),
+        body: JSON.stringify({ action: "reserve", offerId: draft.offer.id, travellers, documentRequired: international, addonIds: draft.addonIds ?? [] }),
       });
       const json = await res.json();
       if (!res.ok) {
@@ -272,6 +322,57 @@ export function CheckoutFlow({ variant = "site" }: { variant?: BookingVariant })
     }
   };
 
+  /** Live bookings: start payment with the backend and hand over to the gateway. */
+  const payLive = async (choice: LiveChoice) => {
+    const r = draft?.reservation;
+    if (!draft || !r?.bookingId || !r.flightId) return;
+    setBusy(choice.method === "WALK_IN_TRANSFER" ? "Holding your seat, please wait..." : "Connecting to secure payment...");
+    try {
+      const res = await fetch("/api/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "pay", bookingId: r.bookingId, flightId: r.flightId, reference: r.pnr, ...choice }),
+      });
+      const json = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(json?.error?.message);
+      const t = bookingTotals(draft);
+      const amount = r.payable ?? t.payable;
+      if (json.alreadyPaid) {
+        // Paid in another tab (or a payment whose return page never loaded): show the confirmation.
+        const airlinePnr = json.booking?.reservation?.airlinePnr;
+        saveBooking({
+          ...draft,
+          reservation: { ...r, airlinePnr: airlinePnr && airlinePnr !== "Pending" ? airlinePnr : r.airlinePnr },
+          payment: { method: draft.payment?.method ?? choice.kind, methodLabel: draft.payment?.methodLabel ?? choice.label, status: "confirmed", transactionRef: draft.payment?.transactionRef ?? null, paidAt: draft.payment?.paidAt ?? null, amount, fee: 0 },
+          bookedAt: draft.bookedAt ?? new Date().toISOString(),
+        });
+        router.push(`${routes.success}?payment_method=card`);
+        return;
+      }
+      if (json.held) {
+        const final: BookingDraft = {
+          ...draft,
+          reservation: { ...r, expiresAt: json.expiresAt ?? r.expiresAt },
+          payment: { method: "hold", methodLabel: choice.label, status: "reserved", transactionRef: null, paidAt: null, amount, fee: 0 },
+          bookedAt: new Date().toISOString(),
+        };
+        saveBooking(final);
+        router.push(`${routes.success}?payment_method=hold&status=reserved`);
+        return;
+      }
+      // Remember where to come back to; the gateway returns to /verify-payment.
+      saveBooking({
+        ...draft,
+        payment: { method: choice.kind, methodLabel: choice.label, status: "processing", transactionRef: json.transactionRef ?? null, paidAt: null, amount, fee: 0 },
+      });
+      sessionStorage.setItem("tbils.paymentReturn", JSON.stringify({ variant, reference: r.pnr }));
+      window.location.assign(json.authorizationUrl);
+    } catch (e) {
+      setBusy(null);
+      setAlert({ title: "We couldn't start your payment", message: e instanceof Error && e.message ? e.message : "Please try again, or choose a different payment method." });
+    }
+  };
+
   const changeSearch = () => search && router.push(`${routes.results}?${searchToParams(search)}`);
 
   const setLead = (patch: Partial<Traveller>) => {
@@ -312,6 +413,14 @@ export function CheckoutFlow({ variant = "site" }: { variant?: BookingVariant })
         ) : (
           <div className={cn("grid items-start gap-4", dash ? "xl:grid-cols-[1fr_360px]" : "lg:grid-cols-[1fr_384px]")}>
             <main className="min-w-0 space-y-4">
+              {draft.priceChanged && (
+                <div role="status" className="flex items-start gap-3 rounded-[14px] border border-[#fed7aa] bg-[#fff7ed] px-4 py-3.5 text-sm text-[#9a3412] animate-[acc-reveal_0.35s_ease]">
+                  <span aria-hidden className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-orange text-xs font-bold text-white">!</span>
+                  <p>
+                    <strong>The airline updated this fare.</strong> The new total is shown in your booking summary. Continue if you&apos;re happy with it, or go back to pick another flight.
+                  </p>
+                </div>
+              )}
               <AccordionSection
                 step={1}
                 title="Traveller details"
@@ -384,12 +493,12 @@ export function CheckoutFlow({ variant = "site" }: { variant?: BookingVariant })
                     <button
                       type="button"
                       onClick={saveTraveller}
-                      className="flex items-center gap-2 rounded-xl bg-blue px-6 py-[13px] text-base font-bold text-white transition hover:bg-blue-600"
+                      className="press flex items-center gap-2 rounded-xl bg-blue px-6 py-[13px] text-base font-bold text-white hover:bg-blue-600"
                     >
                       Save &amp; continue to {labels[activeTraveller + 1]} <ArrowRight className="size-4" />
                     </button>
                   ) : (
-                    <button type="button" onClick={submitTravellers} className="rounded-xl bg-blue px-10 py-[13px] text-base font-bold text-white transition hover:bg-blue-600">
+                    <button type="button" onClick={submitTravellers} className="press rounded-xl bg-blue px-10 py-[13px] text-base font-bold text-white hover:bg-blue-600">
                       Next
                     </button>
                   )}
@@ -410,6 +519,7 @@ export function CheckoutFlow({ variant = "site" }: { variant?: BookingVariant })
                 ) : (
                   <>
                     <AddonsStep
+                      addons={draft.addons ?? []}
                       selected={draft.addonIds ?? []}
                       paxCount={paxCount(draft.search.pax)}
                       onToggle={(id) => {
@@ -441,7 +551,7 @@ export function CheckoutFlow({ variant = "site" }: { variant?: BookingVariant })
                     </label>
                     {termsError && <p className="mt-1.5 text-xs font-medium text-error">Please accept the terms and conditions to continue</p>}
                     <div className="mt-5 flex justify-end">
-                      <button type="button" onClick={reserve} className="rounded-xl bg-blue px-10 py-[13px] text-base font-bold text-white transition hover:bg-blue-600">
+                      <button type="button" onClick={reserve} className="press rounded-xl bg-blue px-10 py-[13px] text-base font-bold text-white hover:bg-blue-600">
                         Continue to Payment
                       </button>
                     </div>
@@ -459,7 +569,7 @@ export function CheckoutFlow({ variant = "site" }: { variant?: BookingVariant })
                 innerRef={(el) => (sections.current.payment = el)}
               >
                 {draft.reservation ? (
-                  <PaymentStep draft={draft} onPay={pay} />
+                  <PaymentStep draft={draft} onPay={pay} onPayLive={payLive} />
                 ) : (
                   <p className="text-sm text-ink-500">Complete traveller details and add-ons to unlock payment.</p>
                 )}

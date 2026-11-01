@@ -54,7 +54,7 @@ function BookingRow({ b, onOpen, style }: { b: HistoryBooking; onOpen: () => voi
         <div className="flex items-center justify-between gap-4 border-t border-[#eef1f5] pt-3 sm:border-0 sm:pt-0">
           <div className="sm:text-right">
             <StatusBadge status={b.status} />
-            <p className="mt-1.5 text-base font-extrabold text-ink-900">{naira(bookingTotals(b).total)}</p>
+            <p className="mt-1.5 text-base font-extrabold text-ink-900">{naira(b.live ? b.payment.amount : bookingTotals(b).total)}</p>
           </div>
           <ChevronRight className="size-5 text-ink-400 transition group-hover:translate-x-0.5 group-hover:text-blue" />
         </div>
@@ -68,7 +68,7 @@ export function BookingsPage() {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
-  const { bookings, refresh } = useBookings();
+  const { bookings, refresh, error } = useBookings();
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("all");
 
@@ -158,6 +158,14 @@ export function BookingsPage() {
         </div>
       </div>
 
+      {error && (
+        <div role="alert" className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#fecaca] bg-[#fef2f2] px-5 py-4 text-sm text-[#b91c1c] animate-[acc-reveal_0.3s_ease]">
+          <span>{error}</span>
+          <button type="button" onClick={refresh} className="press rounded-lg border border-[#fca5a5] bg-white px-3 py-1.5 font-bold">
+            Try again
+          </button>
+        </div>
+      )}
       <div role="tabpanel" key={tab}>
         {!bookings ? (
           <ul className="space-y-3">

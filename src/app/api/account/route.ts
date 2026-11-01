@@ -1,38 +1,40 @@
-import { DEMO_PASSWORD } from "@/data/dashboard/user";
+import { fail, isLive, mockDelay, upstream } from "@/lib/api/upstream";
 
 const NAME = /^[A-Za-z][A-Za-z' -]{1,}$/;
-const fail = (field: string, message: string) => Response.json({ error: { field, message } }, { status: 422 });
+const field = (name: string, message: string) => fail({ code: "VALIDATION", status: 422, message, fields: { [name]: message } });
 
 /**
- * MOCK account API. POST { action, ... }
- *  - "name":     { firstName, surname, middleName? }
- *  - "details":  { email, phone }
- *  - "password": { current, next }  (current must be the demo password; nothing is stored server-side)
+ * POST { action, ... } — account changes the backend stores (name and phone).
+ *  - "name":    { firstName, surname, middleName?, phone }  → PUT /user/profile/update
+ *  - "details": { firstName, surname, phone }               → PUT /user/profile/update
+ * Everything else on the profile (title, DOB, passport…) has no endpoint and is saved on the device.
+ * Passwords change through /api/auth/forgot-password + /api/auth/reset-password.
  */
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
-  await new Promise((r) => setTimeout(r, 900));
+  const firstName = String(body?.firstName ?? "").trim();
+  const surname = String(body?.surname ?? "").trim();
+  const phone = String(body?.phone ?? "").replace(/[^\d+]/g, "");
 
-  switch (body?.action) {
-    case "name": {
-      if (!NAME.test(String(body.firstName ?? "").trim())) return fail("firstName", "Use letters only, at least 2");
-      if (!NAME.test(String(body.surname ?? "").trim())) return fail("surname", "Use letters only, at least 2");
-      if (body.middleName && !NAME.test(String(body.middleName).trim())) return fail("middleName", "Use letters only, at least 2");
-      return Response.json({ ok: true });
-    }
-    case "details": {
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(body.email ?? ""))) return fail("email", "Please enter a valid email");
-      if (!/^\d{7,12}$/.test(String(body.phone ?? "").replace(/\s/g, ""))) return fail("phone", "Please enter a valid phone number");
-      return Response.json({ ok: true });
-    }
-    case "password": {
-      if (body.current !== DEMO_PASSWORD) return fail("current", "Your current password is incorrect");
-      const next = String(body.next ?? "");
-      if (next.length < 8 || !/[A-Z]/.test(next) || !/[a-z]/.test(next) || !/\d/.test(next)) return fail("next", "Password doesn't meet the requirements");
-      if (next === body.current) return fail("next", "Choose a password you haven't used before");
-      return Response.json({ ok: true });
-    }
-    default:
-      return Response.json({ error: { field: "", message: "Unknown action" } }, { status: 400 });
+  if (body?.action !== "name" && body?.action !== "details") return fail({ code: "UNKNOWN_ACTION", status: 400, message: "Unknown action." });
+  if (!NAME.test(firstName)) return field("firstName", "Use letters only, at least 2");
+  if (!NAME.test(surname)) return field("surname", "Use letters only, at least 2");
+  if (body.middleName && !NAME.test(String(body.middleName).trim())) return field("middleName", "Use letters only, at least 2");
+  if (phone && !/^\+?\d{7,15}$/.test(phone)) return field("phone", "Please enter a valid phone number");
+
+  if (!isLive()) {
+    await mockDelay(900);
+    return Response.json({ ok: true });
   }
+  const res = await upstream("/user/profile/update", {
+    method: "PUT",
+    body: { first_name: firstName, last_name: surname, phone },
+    fallback: "We couldn't save your changes right now. Please try again.",
+  });
+  if (!res.ok) {
+    const f = res.error.fields;
+    const mapped = f ? { ...(f.first_name ? { firstName: f.first_name } : {}), ...(f.last_name ? { surname: f.last_name } : {}), ...(f.phone ? { phone: f.phone } : {}) } : {};
+    return fail({ ...res.error, fields: Object.keys(mapped).length ? mapped : undefined });
+  }
+  return Response.json({ ok: true });
 }

@@ -1,9 +1,10 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import { X } from "lucide-react";
 import { Toaster } from "@/components/ui/Toast";
+import { useSession } from "@/lib/account";
 import { cn } from "@/lib/utils";
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
@@ -12,6 +13,13 @@ import { Topbar } from "./Topbar";
 export function DashboardShell({ children }: { children: ReactNode }) {
   const [drawer, setDrawer] = useState(false);
   const path = usePathname();
+  const router = useRouter();
+  const session = useSession();
+
+  // An expired backend token signs the user out; send them to sign in and back here afterwards.
+  useEffect(() => {
+    if (session.live && session.status === "signedOut") router.replace(`/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`);
+  }, [session, router]);
 
   // Close the mobile drawer after navigating.
   // eslint-disable-next-line react-hooks/set-state-in-effect

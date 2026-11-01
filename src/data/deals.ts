@@ -9,6 +9,9 @@ export type Deal = {
   image: string;
   fare: number;
   installment: number;
+  /** Live deals carry their travel dates; local ones search from the deal's route only. */
+  depart?: string;
+  returnDate?: string;
 };
 
 const airline = {
@@ -18,8 +21,6 @@ const airline = {
   AA: { code: "AA", name: "American Airlines" },
   BA: { code: "BA", name: "British Airways" },
 } as const;
-
-export const airlineLogo = (code: string) => `/images/airlines/${code}.png`;
 
 export const deals: Deal[] = [
   { id: "los-lhr", from: "Lagos", fromCode: "LOS", to: "London", toCode: "LHR", trip: "Round trip", airline: airline.TK, image: "/images/deals/london.webp", fare: 1220000, installment: 398434 },

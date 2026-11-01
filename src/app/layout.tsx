@@ -45,10 +45,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           Skip to content
         </a>
         {children}
+        {/* Both read the URL; Suspense keeps dynamic routes prerenderable. */}
         <Suspense fallback={null}>
           <NavProgress />
+          <ScrollReveal />
         </Suspense>
-        <ScrollReveal />
       </body>
     </html>
   );

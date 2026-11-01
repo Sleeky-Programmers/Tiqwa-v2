@@ -1,46 +1,25 @@
 "use client";
 
-import { useEffect, useId, useState, type FormEvent, type ReactNode } from "react";
-import { Award, Check, Eye, EyeOff, KeyRound, Mail, Phone, ShieldCheck, UserRound } from "lucide-react";
+import { useEffect, useId, useState, type FormEvent } from "react";
+import { Award, KeyRound, Mail, MailCheck, Phone, UserRound } from "lucide-react";
+import { OtpInput } from "@/components/auth/OtpInput";
 import { DatePicker, formatDmy } from "@/components/home/search/DatePicker";
 import { CountryPicker } from "@/components/ui/CountryPicker";
+import { Field, PasswordInput, PasswordRules, PasswordStrength, dateField, inputCls, labelCls, passwordOk, postJson, type Errors } from "@/components/ui/form";
 import { Select } from "@/components/ui/Select";
 import { toast } from "@/components/ui/Toast";
 import { flag, getCountry } from "@/data/countries";
 import type { UserProfile } from "@/data/dashboard/user";
-import { fullName, initials, saveProfile, useProfile } from "@/lib/account";
+import { fullName, initials, saveProfile, useProfile, useSession } from "@/lib/account";
 import { cn } from "@/lib/utils";
+import { useRewards } from "./useRewards";
 import { cardCls, ghostBtn, primaryBtn, SectionCard } from "./ui";
 
-const labelCls = "mb-[5px] block text-sm text-[#1d1d1d]";
-const inputCls =
-  "h-[45px] w-full rounded-[10px] border border-[#e4e8ee] bg-white px-3.5 text-[15px] text-ink-900 placeholder:text-[#9ca3af] transition-colors hover:border-blue focus:border-blue focus:outline-none focus:ring-2 focus:ring-blue/20 disabled:bg-tint-100";
-const dateField = "h-[45px] rounded-[10px] border-[#e4e8ee]";
+/** Name and phone are stored by the backend; the full phone goes as +<dial><number>. */
+const backendPhone = (u: Pick<UserProfile, "country" | "phone">) => (u.phone ? `${getCountry(u.country)?.dial ?? "+234"}${u.phone.replace(/\D/g, "").replace(/^0/, "")}` : "");
 
-type Errors = Record<string, string>;
-
-/** POST to the mock account API; resolves to field errors (empty on success). */
 async function submit(action: string, body: Record<string, unknown>): Promise<Errors> {
-  try {
-    const res = await fetch("/api/account", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action, ...body }) });
-    if (res.ok) return {};
-    const json = await res.json().catch(() => null);
-    return { [json?.error?.field || "form"]: json?.error?.message ?? "Something went wrong" };
-  } catch {
-    return { form: "Couldn't reach the server. Check your connection." };
-  }
-}
-
-function Field({ label, error, children, htmlFor, hint }: { label: string; error?: string; children: ReactNode; htmlFor?: string; hint?: string }) {
-  return (
-    <div className="min-w-0">
-      <label htmlFor={htmlFor} className={labelCls}>
-        {label}
-      </label>
-      {children}
-      {error ? <p className="mt-1 text-xs font-medium text-error">{error}</p> : hint ? <p className="mt-1 text-xs text-ink-500">{hint}</p> : null}
-    </div>
-  );
+  return (await postJson("/api/account", { action, ...body })).errors;
 }
 
 function FormActions({ dirty, saving, onCancel, label = "Save changes" }: { dirty: boolean; saving: boolean; onCancel: () => void; label?: string }) {
@@ -81,11 +60,12 @@ function useSliceForm<K extends keyof UserProfile>(keys: K[]) {
 }
 
 function NameForm() {
+  const user = useProfile();
   const f = useSliceForm(["title", "firstName", "middleName", "surname"]);
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     f.setSaving(true);
-    const errs = await submit("name", f.values);
+    const errs = await submit("name", { ...f.values, phone: backendPhone(user) });
     f.setSaving(false);
     f.setErrors(errs);
     if (Object.keys(errs).length) return;
@@ -126,6 +106,8 @@ function NameForm() {
 }
 
 function DetailsForm({ today }: { today: string }) {
+  const user = useProfile();
+  const { live } = useSession();
   const f = useSliceForm(["email", "country", "phone", "dob", "gender", "nationality", "passportNumber", "passportIssued", "passportExpiry", "passportCountry"]);
   const dial = getCountry(f.values.country)?.dial ?? "+234";
   const onSubmit = async (e: FormEvent) => {
@@ -136,7 +118,8 @@ function DetailsForm({ today }: { today: string }) {
     if (f.values.passportExpiry && f.values.passportExpiry <= today) local.passportExpiry = "Passport expiry must be a future date";
     if (Object.keys(local).length) return f.setErrors(local);
     f.setSaving(true);
-    const errs = await submit("details", { email: f.values.email.trim(), phone: f.values.phone });
+    if (!live && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.values.email.trim())) return f.setErrors({ email: "Please enter a valid email" });
+    const errs = await submit("details", { firstName: user.firstName, surname: user.surname, phone: backendPhone(f.values) });
     f.setSaving(false);
     f.setErrors(errs);
     if (Object.keys(errs).length) return;
@@ -144,11 +127,22 @@ function DetailsForm({ today }: { today: string }) {
     toast.success("Contact and travel details saved.");
   };
   return (
-    <SectionCard title="Contact & travel details" description="We use these to pre-fill your bookings and send trip updates.">
+    <SectionCard
+      title="Contact & travel details"
+      description={live ? "Your phone is saved to your account. Travel details are saved on this device to pre-fill bookings." : "We use these to pre-fill your bookings and send trip updates."}
+    >
       <form onSubmit={onSubmit} noValidate>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <Field label="Email address" htmlFor="det-email" error={f.errors.email}>
-            <input id="det-email" type="email" autoComplete="email" value={f.values.email} onChange={(e) => f.set({ email: e.target.value })} className={cn(inputCls, f.errors.email && "border-error")} />
+          <Field label="Email address" htmlFor="det-email" error={f.errors.email} hint={live ? "This is your sign-in email and can't be changed here." : undefined}>
+            <input
+              id="det-email"
+              type="email"
+              autoComplete="email"
+              value={f.values.email}
+              readOnly={live}
+              onChange={(e) => f.set({ email: e.target.value })}
+              className={cn(inputCls, live && "cursor-not-allowed bg-tint-100 text-ink-500", f.errors.email && "border-error")}
+            />
           </Field>
           <Field label="Phone country">
             <CountryPicker label="Phone country" variant="dial" value={f.values.country} onChange={(v) => f.set({ country: v })} />
@@ -179,7 +173,7 @@ function DetailsForm({ today }: { today: string }) {
             fieldClassName={dateField}
           />
           <Field label="Gender">
-            <Select label="Gender" value={f.values.gender} options={["Male", "Female", "Other"]} onChange={(v) => f.set({ gender: v })} triggerClassName="h-[45px]" />
+            <Select label="Gender" value={f.values.gender} options={["Male", "Female"]} onChange={(v) => f.set({ gender: v })} triggerClassName="h-[45px]" />
           </Field>
           <Field label="Nationality">
             <CountryPicker label="Nationality" value={f.values.nationality} onChange={(v) => f.set({ nationality: v })} />
@@ -234,120 +228,93 @@ function DetailsForm({ today }: { today: string }) {
   );
 }
 
-const rules = [
-  { test: (p: string) => p.length >= 8, label: "At least 8 characters" },
-  { test: (p: string) => /[A-Z]/.test(p), label: "One uppercase letter" },
-  { test: (p: string) => /[a-z]/.test(p), label: "One lowercase letter" },
-  { test: (p: string) => /\d/.test(p), label: "One number" },
-  { test: (p: string) => /[^A-Za-z0-9]/.test(p), label: "One symbol (recommended)", optional: true },
-];
-
-function PasswordInput({ id, value, onChange, error, autoComplete }: { id: string; value: string; onChange: (v: string) => void; error?: string; autoComplete: string }) {
-  const [show, setShow] = useState(false);
-  return (
-    <div className="relative">
-      <input
-        id={id}
-        type={show ? "text" : "password"}
-        value={value}
-        autoComplete={autoComplete}
-        onChange={(e) => onChange(e.target.value)}
-        aria-invalid={!!error || undefined}
-        className={cn(inputCls, "pr-11", error && "border-error")}
-      />
-      <button
-        type="button"
-        onClick={() => setShow((s) => !s)}
-        aria-label={show ? "Hide password" : "Show password"}
-        className="absolute right-2 top-1/2 grid size-8 -translate-y-1/2 place-items-center rounded-lg text-ink-400 hover:text-ink-900"
-      >
-        {show ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-      </button>
-    </div>
-  );
-}
-
 function PasswordForm() {
   const id = useId();
-  const [v, setV] = useState({ current: "", next: "", confirm: "" });
+  const user = useProfile();
+  const [step, setStep] = useState<"start" | "code">("start");
+  const [v, setV] = useState({ code: "", next: "", confirm: "" });
   const [errors, setErrors] = useState<Errors>({});
-  const [saving, setSaving] = useState(false);
-  const passed = rules.filter((r) => r.test(v.next)).length;
-  const strength = !v.next ? 0 : passed <= 2 ? 1 : passed <= 4 ? 2 : 3;
-  const strengthUi = [
-    { label: "", cls: "" },
-    { label: "Weak", cls: "bg-error" },
-    { label: "Good", cls: "bg-orange" },
-    { label: "Strong", cls: "bg-[#16a34a]" },
-  ][strength];
+  const [busy, setBusy] = useState(false);
   const set = (patch: Partial<typeof v>) => {
     setV((x) => ({ ...x, ...patch }));
     setErrors((e) => Object.fromEntries(Object.entries(e).filter(([k]) => !(k in patch) && k !== "form")));
   };
-  const dirty = !!(v.current || v.next || v.confirm);
+  const reset = () => {
+    setStep("start");
+    setV({ code: "", next: "", confirm: "" });
+    setErrors({});
+  };
+
+  const sendCode = async () => {
+    setBusy(true);
+    const { errors, status } = await postJson("/api/auth/forgot-password", { email: user.email });
+    setBusy(false);
+    if (Object.keys(errors).length) return setErrors({ form: status === 429 ? "Too many requests. Please wait a minute and try again." : errors.form ?? errors.email });
+    setStep("code");
+    toast.success(`We sent a 6-digit code to ${user.email}.`);
+  };
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     const local: Errors = {};
-    if (!v.current) local.current = "Enter your current password";
-    if (rules.some((r) => !r.optional && !r.test(v.next))) local.next = "Password doesn't meet the requirements";
+    if (v.code.length !== 6) local.code = "Enter the 6-digit code from your email";
+    if (!passwordOk(v.next)) local.next = "Password doesn't meet the requirements";
     if (!v.confirm) local.confirm = "Confirm your new password";
     else if (v.confirm !== v.next) local.confirm = "Passwords don't match";
     if (Object.keys(local).length) return setErrors(local);
-    setSaving(true);
-    const errs = await submit("password", { current: v.current, next: v.next });
-    setSaving(false);
-    setErrors(errs);
-    if (Object.keys(errs).length) return;
-    setV({ current: "", next: "", confirm: "" });
+    setBusy(true);
+    const { errors } = await postJson("/api/auth/reset-password", { email: user.email, code: v.code, password: v.next });
+    setBusy(false);
+    if (Object.keys(errors).length) return setErrors({ ...errors, ...(errors.password ? { next: errors.password } : {}) });
+    reset();
     toast.success("Password changed. Use your new password next time you sign in.");
   };
 
   return (
-    <SectionCard title="Change password" description="Mock account: the current password is Password123!">
-      <form onSubmit={onSubmit} noValidate className="grid gap-6 lg:grid-cols-[1fr_260px]">
-        <div className="space-y-4">
-          <Field label="Current password" htmlFor={`${id}-cur`} error={errors.current}>
-            <PasswordInput id={`${id}-cur`} value={v.current} onChange={(x) => set({ current: x })} error={errors.current} autoComplete="current-password" />
-          </Field>
-          <Field label="New password" htmlFor={`${id}-new`} error={errors.next}>
-            <PasswordInput id={`${id}-new`} value={v.next} onChange={(x) => set({ next: x })} error={errors.next} autoComplete="new-password" />
-          </Field>
-          {v.next && (
-            <div className="flex items-center gap-3" aria-live="polite">
-              <div className="grid flex-1 grid-cols-3 gap-1.5">
-                {[1, 2, 3].map((n) => (
-                  <span key={n} className={cn("h-1.5 rounded-full transition-colors", strength >= n ? strengthUi.cls : "bg-[#e5e7eb]")} />
-                ))}
-              </div>
-              <span className="w-12 text-xs font-semibold text-ink-500">{strengthUi.label}</span>
-            </div>
-          )}
-          <Field label="Confirm new password" htmlFor={`${id}-conf`} error={errors.confirm}>
-            <PasswordInput id={`${id}-conf`} value={v.confirm} onChange={(x) => set({ confirm: x })} error={errors.confirm} autoComplete="new-password" />
-          </Field>
-          {errors.form && <p className="text-sm font-medium text-error">{errors.form}</p>}
+    <SectionCard title="Change password" description="For your security we confirm the change with a code sent to your email.">
+      {step === "start" ? (
+        <div className="flex flex-wrap items-center justify-between gap-4 animate-[fade-in_0.3s_ease]">
+          <div className="flex items-center gap-3">
+            <span className="grid size-11 place-items-center rounded-xl bg-[rgba(2,144,222,0.1)] text-blue">
+              <KeyRound className="size-5" />
+            </span>
+            <p className="max-w-[420px] text-sm text-ink-500">
+              We&apos;ll email a 6-digit code to <strong className="text-ink-900">{user.email || "your email"}</strong>. Enter it with your new password to finish.
+            </p>
+          </div>
+          <button type="button" onClick={sendCode} disabled={busy || !user.email} className={cn(primaryBtn, "press")}>
+            {busy && <span className="size-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />}
+            {busy ? "Sending…" : "Send code"}
+          </button>
+          {errors.form && <p className="w-full text-sm font-medium text-error">{errors.form}</p>}
         </div>
-        <div className="rounded-xl bg-tint-100 p-4">
-          <p className="mb-3 flex items-center gap-2 text-sm font-bold text-ink-900">
-            <ShieldCheck className="size-4 text-blue" /> Password must have
-          </p>
-          <ul className="space-y-2">
-            {rules.map((r) => {
-              const ok = r.test(v.next);
-              return (
-                <li key={r.label} className={cn("flex items-center gap-2 text-[13px]", ok ? "text-[#15803d]" : "text-ink-500")}>
-                  <span className={cn("grid size-4 place-items-center rounded-full", ok ? "bg-[#16a34a] text-white" : "border border-[#cbd5e1]")}>{ok && <Check className="size-3" />}</span>
-                  {r.label}
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-        <div className="lg:col-span-2">
-          <FormActions dirty={dirty} saving={saving} label="Update password" onCancel={() => { setV({ current: "", next: "", confirm: "" }); setErrors({}); }} />
-        </div>
-      </form>
+      ) : (
+        <form onSubmit={onSubmit} noValidate className="grid gap-6 animate-[acc-reveal_0.3s_ease] lg:grid-cols-[1fr_260px]">
+          <div className="space-y-4">
+            <p className="flex items-center gap-2 text-sm text-ink-500">
+              <MailCheck className="size-4 text-blue" /> Code sent to <strong className="text-ink-900">{user.email}</strong>
+              <button type="button" onClick={sendCode} disabled={busy} className="link-underline ml-1 font-semibold text-blue">
+                Resend
+              </button>
+            </p>
+            <Field label="Verification code" error={errors.code}>
+              <OtpInput value={v.code} invalid={!!errors.code} onChange={(c) => set({ code: c })} />
+            </Field>
+            <Field label="New password" htmlFor={`${id}-new`} error={errors.next}>
+              <PasswordInput id={`${id}-new`} value={v.next} onChange={(x) => set({ next: x })} error={errors.next} autoComplete="new-password" />
+            </Field>
+            <PasswordStrength value={v.next} />
+            <Field label="Confirm new password" htmlFor={`${id}-conf`} error={errors.confirm}>
+              <PasswordInput id={`${id}-conf`} value={v.confirm} onChange={(x) => set({ confirm: x })} error={errors.confirm} autoComplete="new-password" />
+            </Field>
+            {errors.form && <p className="text-sm font-medium text-error">{errors.form}</p>}
+          </div>
+          <PasswordRules value={v.next} />
+          <div className="lg:col-span-2">
+            <FormActions dirty saving={busy} label="Update password" onCancel={reset} />
+          </div>
+        </form>
+      )}
     </SectionCard>
   );
 }
@@ -355,6 +322,7 @@ function PasswordForm() {
 /** /dashboard/profile — account overview, update name, contact & travel details, change password. */
 export function ProfilePage() {
   const user = useProfile();
+  const rewards = useRewards();
   const [today, setToday] = useState("");
   useEffect(() => {
     const d = new Date();
@@ -372,18 +340,22 @@ export function ProfilePage() {
           <h2 className="mt-3 font-display text-xl font-extrabold text-ink-900">
             {user.title} {fullName(user)}
           </h2>
-          <p className="text-sm text-ink-500">Member since {new Date(user.memberSince).toLocaleDateString("en-GB", { month: "long", year: "numeric" })}</p>
+          {user.memberSince && (
+            <p className="text-sm text-ink-500">Member since {new Date(user.memberSince).toLocaleDateString("en-GB", { month: "long", year: "numeric" })}</p>
+          )}
           <div className="mt-4 flex items-center gap-3 rounded-xl bg-[rgba(245,134,52,0.1)] p-3">
             <Award className="size-6 text-orange" />
             <div>
-              <p className="text-sm font-bold text-ink-900">{user.tier} member</p>
-              <p className="text-xs text-ink-500">{user.points.toLocaleString("en-NG")} TBiLS points</p>
+              <p className="text-sm font-bold text-ink-900">{rewards.data?.live ? "Referral rewards" : `${user.tier} member`}</p>
+              <p className="text-xs text-ink-500">
+                {rewards.data?.live ? `₦${rewards.data.total.toLocaleString("en-NG")} earned · code ${rewards.data.code || "—"}` : `${user.points.toLocaleString("en-NG")} TBiLS points`}
+              </p>
             </div>
           </div>
           <dl className="mt-4 space-y-3 text-sm">
             {[
               [Mail, "Email", user.email],
-              [Phone, "Phone", `${getCountry(user.country)?.dial ?? ""} ${user.phone}`],
+              [Phone, "Phone", user.phone ? `${getCountry(user.country)?.dial ?? ""} ${user.phone}` : "Not added"],
               [UserRound, "Date of birth", user.dob ? formatDmy(user.dob) : "—"],
               [KeyRound, "Passport", user.passportNumber ? `${user.passportNumber} · exp. ${formatDmy(user.passportExpiry)}` : "Not saved"],
             ].map(([Icon, k, val]) => {

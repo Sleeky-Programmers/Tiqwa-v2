@@ -346,6 +346,22 @@ html::-webkit-scrollbar-track {
   50% { transform: translateY(-8px) rotate(-12deg); }
 }
 .float-y { animation: float-y 5s ease-in-out infinite; }
+/* Slow float for a few key cards (promo, next trip, auth panel). Put it on a wrapper, not on an
+   element that also uses data-reveal or hover-lift (both drive transform). Pauses on hover. */
+@keyframes float-card {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-7px); }
+}
+.float-card { animation: float-card 6s ease-in-out infinite; }
+.float-card:hover { animation-play-state: paused; }
+.float-delay { animation-delay: -3s; }
+/* Soft glow ring that breathes behind status icons. */
+@keyframes glow-ring {
+  0% { box-shadow: 0 0 0 0 rgba(2, 144, 222, 0.28); }
+  70% { box-shadow: 0 0 0 14px rgba(2, 144, 222, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(2, 144, 222, 0); }
+}
+.glow-ring { animation: glow-ring 2.4s ease-out infinite; }
 
 /* Route-change progress bar (NavProgress). */
 @keyframes nav-progress {
@@ -358,6 +374,11 @@ html::-webkit-scrollbar-track {
   [data-reveal],
   [data-reveal-stagger] > * {
     opacity: 1 !important;
+    animation: none !important;
+  }
+  .float-y,
+  .float-card,
+  .glow-ring {
     animation: none !important;
   }
   .hover-lift:hover,

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Clock, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
+import { ContactForm } from "@/components/layout/ContactForm";
 import { PageShell } from "@/components/layout/PageShell";
 import { contact } from "@/data/contact";
 
@@ -16,23 +18,32 @@ const rows = [
 export default function Page() {
   return (
     <PageShell title="Contact us" intro="Flights, visas, payment plans and booking changes — we're here to help.">
-      <ul className="grid max-w-3xl gap-4 sm:grid-cols-2">
-        {rows.map(({ icon: Icon, label, value, href }) => (
-          <li key={label} className="flex items-start gap-3 rounded-2xl border border-line bg-white p-5">
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-blue">
-              <Icon aria-hidden className="size-5" />
-            </span>
-            <span>
-              <span className="block text-xs font-bold uppercase tracking-wider text-outline">{label}</span>
-              {href ? (
-                <a href={href} className="font-semibold text-ink-800 hover:text-blue">{value}</a>
-              ) : (
-                <span className="font-semibold text-ink-800">{value}</span>
-              )}
-            </span>
-          </li>
-        ))}
-      </ul>
+      <div className="grid items-start gap-8 lg:grid-cols-[1fr_380px]">
+        <div data-reveal>
+          <Suspense fallback={<div className="skeleton h-[520px] rounded-[20px]" />}>
+            <ContactForm />
+          </Suspense>
+        </div>
+        <ul data-reveal-stagger className="grid gap-3">
+          {rows.map(({ icon: Icon, label, value, href }) => (
+            <li key={label} className="hover-lift group flex items-start gap-3 rounded-2xl border border-line bg-white p-5">
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-blue transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-110">
+                <Icon aria-hidden className="size-5" />
+              </span>
+              <span>
+                <span className="block text-xs font-bold uppercase tracking-wider text-outline">{label}</span>
+                {href ? (
+                  <a href={href} className="link-underline font-semibold text-ink-800 hover:text-blue">
+                    {value}
+                  </a>
+                ) : (
+                  <span className="font-semibold text-ink-800">{value}</span>
+                )}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
     </PageShell>
   );
 }

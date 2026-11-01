@@ -9,9 +9,11 @@ import { formatDmy } from "@/components/home/search/DatePicker";
 import { ProcessingOverlay } from "@/components/ui/Feedback";
 import { toast } from "@/components/ui/Toast";
 import { contact } from "@/data/contact";
+import { fullName, useProfile } from "@/lib/account";
 import { getCountry } from "@/data/countries";
 import { isPast, updateBooking, type HistoryBooking } from "@/lib/booking/history";
 import { bookingTotals } from "@/lib/booking/pricing";
+import { saveBooking } from "@/lib/booking/store";
 import { cabinLabel, fmtDuration, fmtLongDate, fmtTime, naira, stopsLabel } from "@/lib/flights/format";
 import { cn } from "@/lib/utils";
 import { ghostBtn, outlineBtn, primaryBtn, StatusBadge } from "./ui";
@@ -57,13 +59,16 @@ function Timeline({ b }: { b: HistoryBooking }) {
 
 /**
  * Right-hand slide-in panel with one booking's details and actions.
- * Pay now / cancel are mock: they update the booking in localStorage via `updateBooking`.
+ * Live bookings: "Pay now" restarts payment with the backend (card via the first active gateway) and
+ * cancelling sends a request to the support team (the backend has no cancel endpoint).
+ * Demo bookings: both are simulated in localStorage via `updateBooking`.
  */
 export function BookingDrawer({ booking, onClose, onChanged }: { booking: HistoryBooking | null; onClose: () => void; onChanged: () => void }) {
   const [visible, setVisible] = useState<HistoryBooking | null>(booking);
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [confirmCancel, setConfirmCancel] = useState(false);
+  const user = useProfile();
   const panelRef = useRef<HTMLDivElement>(null);
 
   // Keep the last booking mounted during the slide-out animation.
@@ -111,6 +116,61 @@ export function BookingDrawer({ booking, onClose, onChanged }: { booking: Histor
     toast.success(done);
   };
 
+  const payLive = async () => {
+    setBusy("Connecting to secure payment...");
+    try {
+      const opts = await fetch("/api/payment-options").then((r) => r.json());
+      const method = opts?.methods?.find((m: { id: string }) => m.id === "CARD") ?? opts?.methods?.find((m: { id: string }) => m.id !== "WALK_IN_TRANSFER");
+      const gateway = opts?.gateways?.[0];
+      if (!method || !gateway) throw new Error("Online payment isn't available right now. Please contact support to pay.");
+      const res = await fetch("/api/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "pay", bookingId: b.reservation.bookingId, flightId: b.reservation.flightId, reference: ref, method: method.id, gateway: gateway.id }),
+      });
+      const json = await res.json().catch(() => null);
+      if (res.ok && json?.alreadyPaid) {
+        // Settled elsewhere (another tab or device); refresh instead of opening a second payment.
+        setBusy(null);
+        onChanged();
+        toast.success("This booking is already paid. We've refreshed its status.");
+        return;
+      }
+      if (!res.ok || !json?.authorizationUrl) throw new Error(json?.error?.message ?? "We couldn't start your payment. Please try again.");
+      saveBooking({ ...b, payment: { ...b.payment, method: "card", methodLabel: `${method.title} via ${gateway.name}`, status: "processing" } });
+      sessionStorage.setItem("tbils.paymentReturn", JSON.stringify({ variant: "dashboard", reference: ref }));
+      window.location.assign(json.authorizationUrl);
+    } catch (e) {
+      setBusy(null);
+      toast.error(e instanceof Error ? e.message : "We couldn't start your payment.");
+    }
+  };
+
+  const requestCancel = async () => {
+    setConfirmCancel(false);
+    setBusy("Sending your cancellation request...");
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: fullName(user) || "TBiLS customer",
+          email: user.email,
+          phone: user.phone,
+          subject: `Cancellation request: ${ref}`,
+          message: `Please cancel booking ${ref} (${b.offer.journeys[0].from.code} to ${b.offer.journeys[0].to.code}, departing ${fmtLongDate(b.offer.journeys[0].depart)}). Airline PNR: ${b.reservation.airlinePnr}.`,
+        }),
+      });
+      const json = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(json?.error?.message ?? "We couldn't send your request.");
+      toast.success("Cancellation request sent. Our team will confirm by email, including any refund under the fare rules.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "We couldn't send your request. Please contact support.");
+    } finally {
+      setBusy(null);
+    }
+  };
+
   const payNow = () =>
     act(
       "Processing your payment, please wait...",
@@ -125,6 +185,7 @@ export function BookingDrawer({ booking, onClose, onChanged }: { booking: Histor
     );
 
   const cancel = () => {
+    if (b.live) return requestCancel();
     setConfirmCancel(false);
     act("Cancelling your booking...", () => ({ status: "cancelled", cancelledAt: new Date().toISOString(), payment: b.payment }), `Booking ${ref} has been cancelled.`);
   };
@@ -289,11 +350,11 @@ export function BookingDrawer({ booking, onClose, onChanged }: { booking: Histor
               )}
               <div className="flex justify-between border-t border-[#eef1f5] pt-2.5 text-base">
                 <dt className="font-bold text-ink-900">{b.payment.status === "confirmed" ? "Total paid" : "Total due"}</dt>
-                <dd className="font-extrabold text-blue">{naira(b.payment.status === "confirmed" ? b.payment.amount : t.total)}</dd>
+                <dd className="font-extrabold text-blue">{naira(b.payment.status === "confirmed" || b.live ? b.payment.amount : t.total)}</dd>
               </div>
               <p className="pt-1 text-xs text-ink-500">
                 {b.payment.status === "confirmed"
-                  ? `Paid with ${b.payment.method === "bank" ? "bank transfer" : "Paystack"}${b.payment.transactionRef ? ` · Ref ${b.payment.transactionRef}` : ""}`
+                  ? `Paid with ${b.payment.methodLabel ?? (b.payment.method === "bank" ? "bank transfer" : b.live ? "card" : "Paystack")}${b.payment.transactionRef ? ` · Ref ${b.payment.transactionRef}` : ""}`
                   : b.status === "pending"
                     ? "We're confirming your bank transfer."
                     : "Your seat is reserved until the payment deadline."}
@@ -304,15 +365,19 @@ export function BookingDrawer({ booking, onClose, onChanged }: { booking: Histor
 
         <footer className="flex flex-wrap items-center gap-2 border-t border-[#eef1f5] bg-white px-5 py-4 print:hidden">
           {canPay && (
-            <button type="button" onClick={payNow} className={cn(primaryBtn, "flex-1")}>
-              Pay {naira(t.payable)} now
+            <button type="button" onClick={b.live ? payLive : payNow} className={cn(primaryBtn, "press flex-1")}>
+              Pay {naira(b.live ? b.payment.amount : t.payable)} now
             </button>
           )}
           <button type="button" onClick={() => window.print()} className={cn(outlineBtn, "px-4")} aria-label="Print booking">
             <Printer className="size-4" /> <span className="max-sm:hidden">Print</span>
           </button>
           {b.payment.status === "confirmed" && b.status !== "cancelled" && (
-            <button type="button" onClick={() => toast.success(`E-ticket for ${ref} downloaded (mock).`)} className={cn(outlineBtn, "px-4")}>
+            <button
+              type="button"
+              onClick={() => (b.live ? window.print() : toast.success(`E-ticket for ${ref} downloaded (mock).`))}
+              className={cn(outlineBtn, "px-4")}
+            >
               <Download className="size-4" /> <span className="max-sm:hidden">E-ticket</span>
             </button>
           )}
@@ -321,34 +386,36 @@ export function BookingDrawer({ booking, onClose, onChanged }: { booking: Histor
           </a>
           {canCancel && (
             <button type="button" onClick={() => setConfirmCancel(true)} className={cn(ghostBtn, "ml-auto text-error hover:bg-[#fef2f2] hover:text-error")}>
-              Cancel booking
+              {b.live ? "Request cancellation" : "Cancel booking"}
             </button>
           )}
         </footer>
       </div>
 
       <ProcessingOverlay open={!!busy} message={busy ?? ""} />
-      {confirmCancel && <CancelDialog onKeep={() => setConfirmCancel(false)} onCancel={cancel} refundNote={b.offer.fareRules.refundNote} />}
+      {confirmCancel && <CancelDialog live={!!b.live} onKeep={() => setConfirmCancel(false)} onCancel={cancel} refundNote={b.offer.fareRules.refundNote} />}
     </>,
     document.body,
   );
 }
 
-function CancelDialog({ onKeep, onCancel, refundNote }: { onKeep: () => void; onCancel: () => void; refundNote: string }) {
+function CancelDialog({ onKeep, onCancel, refundNote, live }: { onKeep: () => void; onCancel: () => void; refundNote: string; live: boolean }) {
   return (
     <div className="fixed inset-0 z-[2450] grid place-items-center bg-[rgba(5,20,35,0.66)] p-6 animate-[fade-in_0.18s_ease-out]">
       <div role="alertdialog" aria-modal="true" aria-labelledby="cancel-title" className="w-full max-w-[420px] rounded-[18px] bg-white px-7 pb-6 pt-8 text-center shadow-[0_24px_60px_rgba(1,20,45,0.28)] animate-[modal-in_0.18s_ease]">
         <span className="mx-auto mb-4 grid size-12 place-items-center rounded-full bg-[#fee2e2] text-xl font-bold text-error">!</span>
         <h2 id="cancel-title" className="mb-2 font-display text-xl font-extrabold text-ink-900">
-          Cancel this booking?
+          {live ? "Request a cancellation?" : "Cancel this booking?"}
         </h2>
-        <p className="mb-6 text-[15px] leading-[1.5] text-[#4b5563]">This can&apos;t be undone. Fare rule: {refundNote}.</p>
+        <p className="mb-6 text-[15px] leading-[1.5] text-[#4b5563]">
+          {live ? "We'll send your request to our support team, who'll confirm by email." : "This can't be undone."} Fare rule: {refundNote}.
+        </p>
         <div className="flex gap-3">
           <button type="button" autoFocus onClick={onKeep} className={cn(outlineBtn, "flex-1")}>
             Keep booking
           </button>
           <button type="button" onClick={onCancel} className="flex-1 rounded-xl bg-error py-2.5 text-sm font-bold text-white transition hover:opacity-90">
-            Yes, cancel
+            {live ? "Send request" : "Yes, cancel"}
           </button>
         </div>
       </div>

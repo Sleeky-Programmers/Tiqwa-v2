@@ -82,7 +82,7 @@ const today = () => {
 };
 
 const searchBtn =
-  "flex h-[52px] items-center justify-center rounded-xl bg-blue px-7 text-base font-semibold text-white transition hover:bg-blue-600 active:scale-[0.98]";
+  "press flex h-[52px] items-center justify-center rounded-xl bg-blue px-7 text-base font-semibold text-white hover:bg-blue-600 hover:shadow-[0_8px_20px_rgba(2,144,222,0.3)]";
 
 const airport = (code?: string) => (code ? (getAirport(code) ?? null) : null);
 
