@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
-import type { Airport } from "@/data/airports";
+import { rememberAirports, type Airport } from "@/data/airports";
 import { cn } from "@/lib/utils";
 import { fieldBox, labelCls, useOutsideClose, valueCls } from "./shared";
 
@@ -14,7 +14,9 @@ export const airportDisplay = (a: Airport) => `${a.city}, ${a.country}`;
 async function fetchAirports(q: string, signal: AbortSignal): Promise<Airport[]> {
   const res = await fetch(`/api/airports?q=${encodeURIComponent(q)}`, { signal });
   if (!res.ok) throw new Error("Airport search failed");
-  return (await res.json()).results as Airport[];
+  const results = (await res.json()).results as Airport[];
+  rememberAirports(results);
+  return results;
 }
 
 const PinIcon = () => (

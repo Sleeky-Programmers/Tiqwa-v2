@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { LogOut, MessageCircle, Phone } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 import { contact } from "@/data/contact";
+import { signOut } from "@/lib/account";
 import { cn } from "@/lib/utils";
 import { dashboardNav } from "./nav";
 
@@ -69,13 +70,16 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
             </a>
           </div>
         </div>
-        <Link
-          href="/"
-          onClick={onNavigate}
-          className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-[15px] font-semibold text-[#475569] transition hover:bg-[#fef2f2] hover:text-error"
+        <button
+          type="button"
+          onClick={() => {
+            onNavigate?.();
+            void signOut();
+          }}
+          className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-[15px] font-semibold text-[#475569] transition hover:bg-[#fef2f2] hover:text-error"
         >
           <LogOut className="size-5" /> Sign out
-        </Link>
+        </button>
       </div>
     </div>
   );

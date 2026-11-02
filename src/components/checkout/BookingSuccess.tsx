@@ -14,12 +14,21 @@ import { contact } from "@/data/contact";
 import { getCountry } from "@/data/countries";
 import { bookingTotals } from "@/lib/booking/pricing";
 import { bookingRoutes, type BookingVariant } from "@/lib/booking/routes";
-import { loadBooking, type BookingDraft } from "@/lib/booking/store";
+import { loadBooking, type BookingDraft, type PaymentMethodId } from "@/lib/booking/store";
 import { cabinLabel, fmtDuration, fmtLongDate, fmtTime, naira } from "@/lib/flights/format";
 import { cn } from "@/lib/utils";
 
 const card = "overflow-hidden rounded-[16px] border border-[#dce8f3] bg-white shadow-[0_14px_36px_rgba(18,35,61,0.06)]";
 const label = "text-[11px] font-bold uppercase tracking-[0.06em] text-[#8a94a6]";
+// Used when the payment step didn't record its own label (e.g. a booking restored from the backend).
+const METHOD_LABELS: Record<PaymentMethodId, string> = {
+  paystack: "Paystack",
+  card: "Card",
+  transfer: "Bank transfer",
+  flexi: "Pay small small",
+  bank: "Bank transfer",
+  hold: "Hold, pay later",
+};
 
 function Block({ title, children, className }: { title: string; children: ReactNode; className?: string }) {
   return (
@@ -37,9 +46,19 @@ export function BookingSuccess({ variant = "site" }: { variant?: BookingVariant 
   const router = useRouter();
   const [draft, setDraft] = useState<BookingDraft | null | undefined>(undefined);
 
+  const [liveBank, setLiveBank] = useState<{ bank: string; accountName: string; accountNumber: string } | null>(null);
+
   useEffect(() => {
+    const d = loadBooking();
     // eslint-disable-next-line react-hooks/set-state-in-effect -- read sessionStorage on the client
-    setDraft(loadBooking());
+    setDraft(d);
+    // Held live bookings are paid into the agency's real account.
+    if (d?.live && d.payment?.method === "hold") {
+      fetch("/api/payment-options")
+        .then((r) => r.json())
+        .then((o) => o?.banks?.[0] && setLiveBank(o.banks[0]))
+        .catch(() => {});
+    }
   }, []);
 
   if (draft === undefined) return <InlineLoader message="Loading your booking..." className={dash ? "py-24" : "min-h-screen"} />;
@@ -59,6 +78,10 @@ export function BookingSuccess({ variant = "site" }: { variant?: BookingVariant 
   }
 
   const { payment, reservation, offer, travellers = [] } = draft;
+  // Card, transfer-through-checkout and flexi payments go through a gateway; bank/hold wait for a transfer.
+  const paidOnline = payment.method !== "bank" && payment.method !== "hold";
+  // Never show the demo account on a real booking.
+  const bank = liveBank ?? (draft.live ? null : { bank: bankTransfer.bankName, accountName: bankTransfer.accountName, accountNumber: bankTransfer.accountNumber });
   const t = bookingTotals(draft);
   const status = payment.status;
   const heading =
@@ -76,7 +99,7 @@ export function BookingSuccess({ variant = "site" }: { variant?: BookingVariant 
     ["Booking ref", reservation.pnr],
     ["Booking date", draft.bookedAt ? new Date(draft.bookedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—"],
     ["Payment status", status === "confirmed" ? "Paid" : status === "processing" ? "Processing" : "Pending"],
-    ["Method", payment.method === "paystack" ? "Paystack" : payment.method === "bank" ? "Bank transfer" : "Hold, pay later"],
+    ["Method", payment.methodLabel ?? METHOD_LABELS[payment.method]],
   ];
 
   return (
@@ -90,7 +113,7 @@ export function BookingSuccess({ variant = "site" }: { variant?: BookingVariant 
           <span
             className={cn(
               "mx-auto mb-4 grid size-16 place-items-center rounded-full",
-              status === "confirmed" ? "bg-[#dcfce7] text-[#16a34a]" : "bg-[#fff7ed] text-[#ea580c]",
+              status === "confirmed" ? "glow-ring bg-[#dcfce7] text-[#16a34a]" : "glow-ring bg-[#fff7ed] text-[#ea580c]",
             )}
           >
             {status === "confirmed" ? <CircleCheck className="size-9" /> : <Clock className="size-9" />}
@@ -123,10 +146,10 @@ export function BookingSuccess({ variant = "site" }: { variant?: BookingVariant 
         </section>
 
         <Block title="Payment details">
-          {payment.method === "paystack" && (
+          {paidOnline && (
             <dl className="grid gap-3 sm:grid-cols-2">
               {[
-                ["Payment Method:", "Paystack"],
+                ["Payment Method:", payment.methodLabel ?? METHOD_LABELS[payment.method]],
                 ["Transaction Reference:", payment.transactionRef ?? "—"],
                 ["Amount Paid:", naira(payment.amount)],
                 ["Payment Date:", payment.paidAt ? new Date(payment.paidAt).toLocaleString("en-NG") : "—"],
@@ -138,17 +161,19 @@ export function BookingSuccess({ variant = "site" }: { variant?: BookingVariant 
               ))}
             </dl>
           )}
-          {payment.method !== "paystack" && (
+          {!paidOnline && !bank && <p className="text-sm text-ink-500">Our bank details are on their way to your email. Quote booking reference {reservation.pnr} when you pay.</p>}
+          {!paidOnline && bank && (
             <>
               <p className="mb-4 text-sm text-ink-500">
                 {payment.method === "bank" ? "We're matching your transfer to these details:" : "When you're ready, transfer to:"}
               </p>
               <dl className="grid gap-3 sm:grid-cols-2">
                 {[
-                  ["Bank", bankTransfer.bankName],
-                  ["Account Name", bankTransfer.accountName],
-                  ["Account Number", bankTransfer.accountNumber],
-                  ["Expected Amount", naira(t.total)],
+                  ["Bank", bank.bank],
+                  ["Account Name", bank.accountName],
+                  ["Account Number", bank.accountNumber],
+                  ["Expected Amount", naira(payment.amount || t.total)],
+                  ["Reference to quote", reservation.pnr],
                 ].map(([k, v]) => (
                   <div key={k}>
                     <dt className="text-sm text-ink-500">{k}</dt>

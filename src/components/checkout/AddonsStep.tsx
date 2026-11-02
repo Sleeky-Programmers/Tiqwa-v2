@@ -1,6 +1,6 @@
 "use client";
 
-import { addons, type Addon } from "@/data/booking";
+import type { Addon } from "@/data/booking";
 import { cn } from "@/lib/utils";
 
 const icons: Record<Addon["icon"], React.ReactNode> = {
@@ -12,14 +12,17 @@ const icons: Record<Addon["icon"], React.ReactNode> = {
 
 /** Optional extras list (tbils.com step 2) with Add / Remove toggles. */
 export function AddonsStep({
+  addons,
   selected,
   onToggle,
   paxCount,
 }: {
+  addons: Addon[];
   selected: string[];
   onToggle: (id: string) => void;
   paxCount: number;
 }) {
+  if (!addons.length) return <p className="mb-4 rounded-xl bg-tint-100 px-4 py-3.5 text-sm text-ink-500">No extras are available for this flight. You can continue to payment.</p>;
   return (
     <div>
       {addons.map((a, i) => {

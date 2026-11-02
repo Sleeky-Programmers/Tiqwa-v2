@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { LivePayment } from "./LivePayment";
 import { Modal } from "@/components/ui/Modal";
 import { bankTransfer } from "@/data/booking";
 import { bookingTotals } from "@/lib/booking/pricing";
@@ -9,21 +10,35 @@ import { naira } from "@/lib/flights/format";
 import { cn } from "@/lib/utils";
 
 export type PayMethod = "paystack" | "bank" | "hold";
+export type { LiveChoice } from "./LivePayment";
 
 const tabCls = "inline-flex items-center justify-center gap-2 rounded-[10px] px-2.5 py-3 text-sm font-semibold transition";
 
 /**
- * Step 3: "Choose how to pay" — reservation box, Paystack / bank transfer tabs and
- * "Hold, pay later". All mock: no money moves; `onPay` records the chosen method.
+ * Step 3: "Choose how to pay". Live bookings use the backend's payment methods and gateways
+ * (LivePayment); demo mode keeps the simulated Paystack / bank transfer / hold options.
  */
-export function PaymentStep({ draft, onPay }: { draft: BookingDraft; onPay: (method: PayMethod, reference?: string) => void }) {
+export function PaymentStep({
+  draft,
+  onPay,
+  onPayLive,
+}: {
+  draft: BookingDraft;
+  onPay: (method: PayMethod, reference?: string) => void;
+  onPayLive: (choice: import("./LivePayment").LiveChoice) => void;
+}) {
+  if (draft.live) return <LivePayment draft={draft} onPay={onPayLive} />;
+  return <DemoPayment draft={draft} onPay={onPay} />;
+}
+
+/** Demo mode (no backend): Paystack / bank transfer tabs and "Hold, pay later", all simulated. */
+function DemoPayment({ draft, onPay }: { draft: BookingDraft; onPay: (method: PayMethod, reference?: string) => void }) {
   const [method, setMethod] = useState<"paystack" | "bank">("paystack");
   const [sent, setSent] = useState(false);
   const [paystackOpen, setPaystackOpen] = useState(false);
   const t = bookingTotals(draft);
   const r = draft.reservation;
   const email = draft.travellers?.[0]?.email ?? "";
-  const deadline = r ? new Date(r.expiresAt) : null;
   const copy = (v: string) => navigator.clipboard?.writeText(v).catch(() => {});
 
   return (
@@ -33,28 +48,7 @@ export function PaymentStep({ draft, onPay }: { draft: BookingDraft; onPay: (met
         <p className="text-[13.5px] leading-[1.5] text-ink-500">Complete your booking securely. Your details are encrypted.</p>
       </div>
 
-      {r && (
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-xl border border-[#d5e9f5] bg-[#f2f9fd] px-3.5 py-3">
-          <div className="flex flex-col gap-0.5">
-            <span className="text-xs font-semibold text-[#64748b]">Airline PNR</span>
-            <span className="text-xl font-bold tabular-nums tracking-[0.06em] text-ink-900">{r.airlinePnr}</span>
-          </div>
-          <div className="flex flex-wrap gap-x-3.5 gap-y-1 text-[13px] text-[#475569]">
-            <span>
-              Booking ref <strong className="text-ink-900">{r.pnr}</strong>
-            </span>
-            <span>
-              Order no. <strong className="text-ink-900">{r.orderNo}</strong>
-            </span>
-            {deadline && (
-              <span className="text-[#b45309]">
-                Pay before{" "}
-                <strong>{deadline.toLocaleString("en-NG", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</strong>
-              </span>
-            )}
-          </div>
-        </div>
-      )}
+      {r && <ReservationBox r={r} />}
 
       <div role="tablist" aria-label="Payment method" className="mb-[18px] grid grid-cols-2 gap-2 rounded-[14px] border border-[#e8edf3] bg-[#f6f8fb] p-1.5">
         {(
@@ -227,5 +221,35 @@ function MockPaystack({
         </button>
       </div>
     </Modal>
+  );
+}
+
+/** PNR, booking ref and payment deadline shown above the payment options. */
+export function ReservationBox({ r }: { r: NonNullable<BookingDraft["reservation"]> }) {
+  const deadline = new Date(r.expiresAt);
+  const pnrPending = !r.airlinePnr || r.airlinePnr === "Pending";
+  return (
+    <div className="mb-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-xl border border-[#d5e9f5] bg-[#f2f9fd] px-3.5 py-3">
+      <div className="flex flex-col gap-0.5">
+        {/* Live airlines issue the PNR after payment; until then the booking reference is the one to quote. */}
+        <span className="text-xs font-semibold text-[#64748b]">{pnrPending ? "Booking reference" : "Airline PNR"}</span>
+        <span className="text-xl font-bold tabular-nums tracking-[0.06em] text-ink-900">{pnrPending ? r.pnr : r.airlinePnr}</span>
+      </div>
+      <div className="flex flex-wrap gap-x-3.5 gap-y-1 text-[13px] text-[#475569]">
+        {pnrPending ? (
+          <span>Airline PNR issued after payment</span>
+        ) : (
+          <span>
+            Booking ref <strong className="text-ink-900">{r.pnr}</strong>
+          </span>
+        )}
+        <span>
+          Order no. <strong className="text-ink-900">{r.orderNo}</strong>
+        </span>
+        <span className="text-[#b45309]">
+          Pay before <strong>{deadline.toLocaleString("en-NG", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</strong>
+        </span>
+      </div>
+    </div>
   );
 }

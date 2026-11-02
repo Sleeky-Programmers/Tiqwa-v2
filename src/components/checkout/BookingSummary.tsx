@@ -38,7 +38,7 @@ export function BookingSummary({
         body: JSON.stringify({ code, amount: t.fare + t.addonsTotal }),
       });
       const json = await res.json();
-      if (!res.ok) throw new Error(json.error ?? "Couldn't apply this code");
+      if (!res.ok) throw new Error((typeof json?.error === "string" ? json.error : json?.error?.message) ?? "Couldn't apply this code");
       onPromo({ code: json.code, discount: json.discount });
       setStatus("idle");
     } catch (e) {
@@ -55,7 +55,7 @@ export function BookingSummary({
   ].filter((r) => r.count > 0);
 
   return (
-    <div className="overflow-hidden rounded-[14px] border border-[#eef1f5] bg-white shadow-[0_1px_2px_rgba(16,40,68,0.04),0_8px_24px_rgba(16,40,68,0.05)]">
+    <div data-reveal="right" className="overflow-hidden rounded-[14px] border border-[#eef1f5] bg-white shadow-[0_1px_2px_rgba(16,40,68,0.04),0_8px_24px_rgba(16,40,68,0.05)]">
       <h3 className="border-b border-[#eef1f5] px-[18px] py-4 text-lg font-bold text-ink-900">Booking Summary</h3>
 
       <div className={section}>
@@ -154,7 +154,7 @@ export function BookingSummary({
         </div>
         {draft.promo && <p className="mt-2 text-sm font-semibold text-[#15803d]">Promo code applied: {nairaSpaced(draft.promo.discount)} off</p>}
         {status === "error" && <p className="mt-2 text-sm font-medium text-error">{error}</p>}
-        {!draft.promo && status !== "error" && <p className="mt-2 text-xs text-ink-400">Try TBILS10 or WELCOME5000 (mock codes)</p>}
+        {!draft.live && !draft.promo && status !== "error" && <p className="mt-2 text-xs text-ink-400">Try TBILS10 or WELCOME5000 (mock codes)</p>}
       </div>
 
       <div className={section}>

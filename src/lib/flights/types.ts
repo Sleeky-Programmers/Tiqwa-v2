@@ -49,6 +49,8 @@ export type FareRules = {
   changeNote: string;
   checkedBaggage: string;
   cabinBaggage: string;
+  /** Full fare conditions from the supplier, when it sends them. */
+  notes?: string[];
 };
 
 export type PriceBreakdown = {
@@ -66,7 +68,9 @@ export type FlightOffer = {
   cabin: Cabin;
   price: PriceBreakdown;
   fareRules: FareRules;
-  seatsLeft: number;
+  /** Unknown until the fare is re-priced on checkout for live results. */
+  seatsLeft?: number;
 };
 
-export type SearchResponse = { search: FlightSearch; offers: FlightOffer[]; currency: "NGN" };
+/** `live` is true when the offers came from the booking backend rather than the mock generator. */
+export type SearchResponse = { search: FlightSearch; offers: FlightOffer[]; currency: string; live?: boolean };

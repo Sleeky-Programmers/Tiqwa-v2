@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { ArrowRight, ChevronRight, User, X } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 import { mainNav, mobileNav, suiteLinks } from "@/data/nav";
+import { initials, useProfile, useSession } from "@/lib/account";
 import { cn } from "@/lib/utils";
 
 /** tbils.com switches the bar to its solid state once the page scrolls past this point. */
@@ -131,13 +132,7 @@ export function Header({ solid = false }: { solid?: boolean }) {
           </ul>
 
           <div className="flex items-center gap-2">
-            <Link
-              href="/dashboard"
-              className="flex items-center gap-2 whitespace-nowrap rounded-[10px] bg-orange px-[22px] py-[11px] text-sm font-bold leading-[14px] tracking-[0.01em] text-white shadow-[0_1px_2px_rgba(74,34,4,0.2)] transition hover:bg-orange-600"
-            >
-              <User aria-hidden className="size-4" />
-              Log in/Sign up
-            </Link>
+            <AccountButton />
             <MenuButton light={!solidBar} onClick={() => setDrawerOpen(true)} className="lg:hidden" />
           </div>
         </nav>
@@ -181,10 +176,33 @@ function MenuButton({ light, onClick, className }: { light: boolean; onClick: ()
   );
 }
 
+/** Orange CTA: "Log in/Sign up" when signed out, the account holder's initials once signed in. */
+function AccountButton() {
+  const { status } = useSession();
+  const user = useProfile();
+  const cls =
+    "press flex items-center gap-2 whitespace-nowrap rounded-[10px] bg-orange px-[22px] py-[11px] text-sm font-bold leading-[14px] tracking-[0.01em] text-white shadow-[0_1px_2px_rgba(74,34,4,0.2)] hover:bg-orange-600";
+  if (status === "signedIn") {
+    return (
+      <Link href="/dashboard" className={cn(cls, "py-[7px] pl-[7px] pr-[18px]")}>
+        <span className="grid size-[26px] place-items-center rounded-full bg-white/25 text-[11px]">{initials(user) || <User aria-hidden className="size-4" />}</span>
+        My account
+      </Link>
+    );
+  }
+  return (
+    <Link href="/login" className={cls}>
+      <User aria-hidden className="size-4" />
+      Log in/Sign up
+    </Link>
+  );
+}
+
 function MobileDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
   const card =
     "flex w-full items-center gap-[14px] rounded-2xl border-[0.83px] px-4 py-[13px] text-left text-base font-semibold text-white transition-[background-color,transform] duration-[180ms] hover:translate-x-0.5";
   const items = [...mobileNav];
+  const signedIn = useSession().status === "signedIn";
   return (
     <>
       <div
@@ -238,11 +256,11 @@ function MobileDrawer({ open, onClose }: { open: boolean; onClose: () => void })
             ))}
             <li className="drawer-card pt-[6px]" style={{ "--i": items.length } as React.CSSProperties}>
               <Link
-                href="/dashboard"
+                href={signedIn ? "/dashboard" : "/login"}
                 onClick={onClose}
                 className={cn(card, "border-[rgba(2,152,218,0.4)] bg-[rgba(2,144,222,0.16)] hover:bg-[rgba(2,144,222,0.24)]")}
               >
-                Log in / Sign up
+                {signedIn ? "My account" : "Log in / Sign up"}
                 <ChevronRight aria-hidden className="ml-auto size-[18px] text-white/40" />
               </Link>
             </li>

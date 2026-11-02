@@ -3,6 +3,7 @@ import { FaqSection } from "@/components/home/FaqSection";
 import { Hero } from "@/components/home/Hero";
 import { NewsletterSection } from "@/components/home/NewsletterSection";
 import { FlightExplorer } from "@/components/home/FlightExplorer";
+import { HolidayPackages } from "@/components/home/HolidayPackages";
 import { WelcomeOffer } from "@/components/layout/WelcomeOffer";
 import { PartnersStrip, PromoBanner, ServicesBand, WhyTbils } from "@/components/home/Sections";
 import { faqs } from "@/data/content";
@@ -37,6 +38,7 @@ export default function Home() {
       <Hero />
       <DealsSection />
       <PromoBanner />
+      <HolidayPackages />
       <ServicesBand />
       <PartnersStrip />
       <WhyTbils />

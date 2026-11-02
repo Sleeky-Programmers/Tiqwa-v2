@@ -6,6 +6,7 @@ import { SlidersHorizontal } from "lucide-react";
 import { SearchConsole } from "@/components/home/search/SearchConsole";
 import { Modal } from "@/components/ui/Modal";
 import { bookingRoutes } from "@/lib/booking/routes";
+import { rememberAirports } from "@/data/airports";
 import { saveBooking } from "@/lib/booking/store";
 import { parseSearch } from "@/lib/flights/search-params";
 import type { FlightOffer, SearchResponse } from "@/lib/flights/types";
@@ -93,7 +94,10 @@ export function FlightResults({ variant = "site" }: { variant?: "site" | "dashbo
       .then(async (res) => {
         const json = await res.json();
         if (!res.ok) throw new Error(json?.error?.message ?? "We couldn't load flights. Please try again.");
-        setState({ status: "ready", data: json as SearchResponse });
+        const data = json as SearchResponse;
+        // Live results can include airports outside the local list; keep their names for labels.
+        rememberAirports(data.offers.flatMap((o) => o.journeys.flatMap((j) => j.segments.flatMap((s) => [s.from, s.to]))));
+        setState({ status: "ready", data });
       })
       .catch((e) => {
         if (e.name !== "AbortError") setState({ status: "error", message: e.message });
@@ -124,7 +128,7 @@ export function FlightResults({ variant = "site" }: { variant?: "site" | "dashbo
 
   const book = (offer: FlightOffer) => {
     if (!search) return;
-    saveBooking({ search, offer });
+    saveBooking({ search, offer, live: state.status === "ready" && !!state.data.live });
     setDetails(null);
     router.push(routes.checkout);
   };

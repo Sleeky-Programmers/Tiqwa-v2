@@ -67,50 +67,52 @@ export function NewsletterSection() {
           </dl>
         </div>
 
-        <div data-reveal="right" className="rounded-2xl border-[0.83px] border-[#dce8f3] bg-white p-[30px] shadow-[0_14px_36px_rgba(18,35,61,0.1)]">
-          <h3 className="text-xl font-extrabold text-[#0a1f44]">Subscribe for free</h3>
-          <p className="mt-1 text-[13px] leading-[19.5px] text-[#5a5a5a]">No spam. Unsubscribe anytime.</p>
-          {status === "done" ? (
-            <p role="status" className="mt-6 flex items-center gap-2 text-sm font-semibold text-[#087dcc]">
-              <CircleCheck aria-hidden className="size-5" /> You&apos;re in! Watch your inbox for this week&apos;s deals.
-            </p>
-          ) : (
-            <form onSubmit={onSubmit} className="mt-5">
-              <div className="grid gap-[14px] sm:grid-cols-2">
-                <div>
-                  <label htmlFor="nl-name" className={lbl}>
-                    Your name
-                  </label>
-                  <input id="nl-name" name="name" type="text" autoComplete="name" className={input} />
-                </div>
-                <div>
-                  <label htmlFor="nl-email" className={lbl}>
-                    Email address <span className="text-sm text-[#e53e3e]">*</span>
-                  </label>
-                  <input id="nl-email" name="email" type="email" required autoComplete="email" className={input} />
-                </div>
-              </div>
-              <button
-                type="submit"
-                disabled={status === "sending"}
-                className="mt-4 h-[50px] w-full rounded-[10px] bg-[#087dcc] text-[15px] font-bold text-white transition hover:bg-[#0670b8] disabled:opacity-60"
-              >
-                {status === "sending" ? "Sending…" : "Send me free deals"}
-              </button>
-              {status === "error" && (
-                <p role="alert" className="mt-2 text-sm font-semibold text-error">
-                  {message}
-                </p>
-              )}
-              <p className="mt-[14px] text-xs leading-[18px] text-[#5a5a5a]">
-                By subscribing you agree to our{" "}
-                <Link href="/privacy-policy" className="font-semibold text-[#0265a3] hover:underline">
-                  Privacy Policy
-                </Link>
-                .
+        <div data-reveal="right">
+          <div className="float-card rounded-2xl border-[0.83px] border-[#dce8f3] bg-white p-[30px] shadow-[0_14px_36px_rgba(18,35,61,0.1)]">
+            <h3 className="text-xl font-extrabold text-[#0a1f44]">Subscribe for free</h3>
+            <p className="mt-1 text-[13px] leading-[19.5px] text-[#5a5a5a]">No spam. Unsubscribe anytime.</p>
+            {status === "done" ? (
+              <p role="status" className="mt-6 flex items-center gap-2 text-sm font-semibold text-[#087dcc]">
+                <CircleCheck aria-hidden className="size-5" /> You&apos;re in! Watch your inbox for this week&apos;s deals.
               </p>
-            </form>
-          )}
+            ) : (
+              <form onSubmit={onSubmit} className="mt-5">
+                <div className="grid gap-[14px] sm:grid-cols-2">
+                  <div>
+                    <label htmlFor="nl-name" className={lbl}>
+                      Your name
+                    </label>
+                    <input id="nl-name" name="name" type="text" autoComplete="name" className={input} />
+                  </div>
+                  <div>
+                    <label htmlFor="nl-email" className={lbl}>
+                      Email address <span className="text-sm text-[#e53e3e]">*</span>
+                    </label>
+                    <input id="nl-email" name="email" type="email" required autoComplete="email" className={input} />
+                  </div>
+                </div>
+                <button
+                  type="submit"
+                  disabled={status === "sending"}
+                  className="press mt-4 h-[50px] w-full rounded-[10px] bg-[#087dcc] text-[15px] font-bold text-white hover:bg-[#0670b8] disabled:opacity-60"
+                >
+                  {status === "sending" ? "Sending…" : "Send me free deals"}
+                </button>
+                {status === "error" && (
+                  <p role="alert" className="mt-2 text-sm font-semibold text-error">
+                    {message}
+                  </p>
+                )}
+                <p className="mt-[14px] text-xs leading-[18px] text-[#5a5a5a]">
+                  By subscribing you agree to our{" "}
+                  <Link href="/privacy-policy" className="font-semibold text-[#0265a3] hover:underline">
+                    Privacy Policy
+                  </Link>
+                  .
+                </p>
+              </form>
+            )}
+          </div>
         </div>
       </Container>
     </section>

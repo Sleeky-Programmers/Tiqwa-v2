@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, Bell, ChevronDown, Globe, LogOut, Menu, Plane, UserRound } from "lucide-react";
 import { useOutsideClose } from "@/components/home/search/shared";
 import { notifications } from "@/data/dashboard/user";
-import { fullName, initials, useProfile } from "@/lib/account";
+import { fullName, initials, signOut, useProfile } from "@/lib/account";
 import { loadBooking } from "@/lib/booking/store";
 import { searchToParams } from "@/lib/flights/search-params";
 import { cn } from "@/lib/utils";
@@ -144,21 +144,28 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
             {[
               { href: "/dashboard/profile", label: "Profile", icon: UserRound },
               { href: "/", label: "Back to website", icon: Globe },
-              { href: "/", label: "Sign out", icon: LogOut },
             ].map(({ href, label, icon: Icon }) => (
               <Link
                 key={label}
                 role="menuitem"
                 href={href}
                 onClick={() => setOpen(null)}
-                className={cn(
-                  "mt-1 flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                  label === "Sign out" ? "text-error hover:bg-[#fef2f2]" : "text-ink-800 hover:bg-tint-200",
-                )}
+                className="mt-1 flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-ink-800 transition-colors hover:bg-tint-200"
               >
                 <Icon className="size-4" /> {label}
               </Link>
             ))}
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setOpen(null);
+                void signOut();
+              }}
+              className="mt-1 flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-error transition-colors hover:bg-[#fef2f2]"
+            >
+              <LogOut className="size-4" /> Sign out
+            </button>
           </div>
         )}
       </div>

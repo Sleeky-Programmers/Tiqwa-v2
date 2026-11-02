@@ -7,16 +7,19 @@ export function PromoBanner() {
   return (
     <section className="pb-[56px]">
       <Container>
-        <Link data-reveal="zoom" href="/contact?type=holiday" className="hover-zoom hover-lift block overflow-hidden rounded-[18px]">
-          <Image
-            src="/images/promo/qatar.png"
-            alt="Discover Qatar with TBILS Tourism"
-            width={2048}
-            height={768}
-            sizes="(min-width: 1232px) 1232px, 100vw"
-            className="h-auto w-full"
-          />
-        </Link>
+        {/* Reveal on the link, float on a wrapper: each drives its own transform. */}
+        <div className="float-card">
+          <Link data-reveal="zoom" href="/contact?subject=Holiday%20package%20enquiry" className="hover-zoom hover-lift block overflow-hidden rounded-[18px]">
+            <Image
+              src="/images/promo/qatar.png"
+              alt="Discover Qatar with TBILS Tourism"
+              width={2048}
+              height={768}
+              sizes="(min-width: 1232px) 1232px, 100vw"
+              className="h-auto w-full"
+            />
+          </Link>
+        </div>
       </Container>
     </section>
   );

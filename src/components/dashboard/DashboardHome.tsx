@@ -92,7 +92,7 @@ function NextTrip({ booking }: { booking: HistoryBooking }) {
 /** /dashboard overview: greeting + search CTA, stats, next trip, spend chart, destinations, actions, deals. */
 export function DashboardHome() {
   const user = useProfile();
-  const { bookings } = useBookings();
+  const { bookings, error, refresh } = useBookings();
   const [hour, setHour] = useState<number | null>(null);
   // eslint-disable-next-line react-hooks/set-state-in-effect -- local time only exists on the client
   useEffect(() => setHour(new Date().getHours()), []);
@@ -102,10 +102,10 @@ export function DashboardHome() {
     <div className="space-y-6">
       <section className="relative overflow-hidden rounded-2xl bg-[linear-gradient(140deg,#0a1628,#013557_45%,#0290de)] px-6 py-7 text-white sm:px-8 animate-[fade-up_0.4s_cubic-bezier(0.16,1,0.3,1)_both]">
         <div aria-hidden className="absolute -right-16 -top-20 size-72 rounded-full bg-[radial-gradient(circle,rgba(2,144,222,0.45),transparent_65%)]" />
-        <Plane aria-hidden className="absolute bottom-6 right-8 hidden size-24 -rotate-12 text-white/10 md:block" />
+        <Plane aria-hidden className="float-y absolute bottom-6 right-8 hidden size-24 text-white/10 md:block" />
         <div className="relative max-w-[620px]">
           <p className="text-sm font-semibold text-[#8fd0ff]">{hour === null ? "Welcome back" : greeting(hour)},</p>
-          <h2 className="mt-1 font-display text-[28px] font-extrabold leading-tight sm:text-[32px]">{user.firstName}, where to next?</h2>
+          <h2 className="mt-1 font-display text-[28px] font-extrabold leading-tight sm:text-[32px]">{user.firstName || "Traveller"}, where to next?</h2>
           <p className="mt-2 text-sm text-white/80">
             Compare fares from hundreds of airlines and spread the cost with Pay Small Small on eligible bookings.
           </p>
@@ -119,6 +119,15 @@ export function DashboardHome() {
           </div>
         </div>
       </section>
+
+      {error && (
+        <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#fecaca] bg-[#fef2f2] px-5 py-4 text-sm text-[#b91c1c] animate-[acc-reveal_0.3s_ease]">
+          <span>{error}</span>
+          <button type="button" onClick={refresh} className="press rounded-lg border border-[#fca5a5] bg-white px-3 py-1.5 font-bold">
+            Try again
+          </button>
+        </div>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {m ? (
@@ -134,7 +143,10 @@ export function DashboardHome() {
       </div>
 
       {m?.next ? (
-        <NextTrip booking={m.next} />
+        // The one card that floats on the dashboard: your next trip.
+        <div className="float-card">
+          <NextTrip booking={m.next} />
+        </div>
       ) : m ? (
         <section className={cardCls}>
           <EmptyState
@@ -176,7 +188,7 @@ export function DashboardHome() {
                         {b.offer.journeys[0].from.city} → {b.offer.journeys[0].to.city}
                       </p>
                       <p className="text-xs text-ink-500">
-                        {statusLabel[b.status]} · {naira(bookingTotals(b).total)}
+                        {statusLabel[b.status]} · {naira(b.live ? b.payment.amount : bookingTotals(b).total)}
                         {b.status === "hold" && ` · pay before ${new Date(b.reservation.expiresAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}`}
                       </p>
                     </div>

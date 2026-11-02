@@ -1,9 +1,10 @@
-import { CalendarCheck, LayoutDashboard, Plane, UserRound } from "lucide-react";
+import { CalendarCheck, Gift, LayoutDashboard, Plane, UserRound } from "lucide-react";
 
 export const dashboardNav = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/dashboard/flights", label: "Flights", icon: Plane },
   { href: "/dashboard/bookings", label: "Bookings", icon: CalendarCheck },
+  { href: "/dashboard/rewards", label: "Rewards", icon: Gift },
   { href: "/dashboard/profile", label: "Profile", icon: UserRound },
 ] as const;
 
@@ -31,6 +32,7 @@ export function pageMeta(path: string, resultsHref = "/dashboard/flights/results
   }
   if (path.startsWith("/dashboard/flights")) return { title: "Search flights", crumbs: [{ label: "Flights" }] };
   if (path.startsWith("/dashboard/bookings")) return { title: "My bookings", crumbs: [{ label: "Bookings" }] };
+  if (path.startsWith("/dashboard/rewards")) return { title: "Rewards", crumbs: [{ label: "Rewards" }] };
   if (path.startsWith("/dashboard/profile")) return { title: "Profile", crumbs: [{ label: "Profile" }] };
   return { title: "Dashboard", crumbs: [{ label: "Overview" }] };
 }

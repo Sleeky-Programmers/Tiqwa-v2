@@ -4,7 +4,7 @@ import { bookingTotals } from "@/lib/booking/pricing";
 import { distanceKm } from "@/lib/flights/geo";
 import type { MonthPoint } from "./SpendChart";
 
-const paidAmount = (b: HistoryBooking) => (b.status === "cancelled" || b.payment.status !== "confirmed" ? 0 : bookingTotals(b).total);
+const paidAmount = (b: HistoryBooking) => (b.status === "cancelled" || b.payment.status !== "confirmed" ? 0 : b.live ? b.payment.amount : bookingTotals(b).total);
 
 /** Everything the dashboard home shows, derived from the booking list. */
 export function dashboardMetrics(bookings: HistoryBooking[]) {
