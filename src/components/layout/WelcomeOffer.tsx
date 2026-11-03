@@ -59,12 +59,15 @@ export function WelcomeOffer() {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[2200] flex items-center justify-center bg-navy-950/70 p-4" onMouseDown={(e) => e.target === e.currentTarget && close()}>
+    <div
+      className="fixed inset-0 z-[2200] flex items-center justify-center bg-navy-950/70 p-4 animate-[fade-in_0.25s_ease] motion-reduce:animate-none"
+      onMouseDown={(e) => e.target === e.currentTarget && close()}
+    >
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="welcome-title"
-        className="relative grid w-full max-w-[820px] overflow-hidden rounded-2xl bg-white shadow-overlay md:grid-cols-2"
+        className="relative grid w-full max-w-[820px] overflow-hidden rounded-2xl bg-white shadow-overlay animate-[modal-in_0.4s_cubic-bezier(0.16,1,0.3,1)] motion-reduce:animate-none md:grid-cols-2"
       >
         <button
           ref={closeRef}

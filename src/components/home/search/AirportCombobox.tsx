@@ -3,7 +3,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { rememberAirports, type Airport } from "@/data/airports";
 import { cn } from "@/lib/utils";
-import { fieldBox, labelCls, useOutsideClose, valueCls } from "./shared";
+import { fieldBox, Floating, labelCls, useOutsideClose, valueCls } from "./shared";
 
 const MIN_CHARS = 2;
 const DEBOUNCE_MS = 250;
@@ -58,7 +58,9 @@ export function AirportCombobox({
     setEditing(false);
     setQuery("");
   };
-  const ref = useOutsideClose<HTMLDivElement>(close);
+  const boxRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const ref = useOutsideClose<HTMLDivElement>(close, menuRef);
 
   // Popular list on open / under 2 chars; live search from 2 chars.
   const term = query.trim().length >= MIN_CHARS ? query.trim() : "";
@@ -105,7 +107,7 @@ export function AirportCombobox({
       <label htmlFor={id} className={labelCls}>
         {title}
       </label>
-      <div className={cn(fieldBox, open && "border-blue ring-2 ring-blue/25")}>
+      <div ref={boxRef} className={cn(fieldBox, open && "border-blue ring-2 ring-blue/25")}>
         <PinIcon />
         <input
           ref={inputRef}
@@ -166,7 +168,13 @@ export function AirportCombobox({
       <input type="hidden" name={name} value={value?.code ?? ""} />
 
       {open && (
-        <div className="absolute left-0 top-full z-40 mt-1 max-h-[400px] w-full overflow-y-auto rounded border-[0.83px] border-[#ddd] bg-white shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1),0_8px_10px_-6px_rgba(0,0,0,0.1)]">
+        <Floating
+          anchorRef={boxRef}
+          floatingRef={menuRef}
+          gap={4}
+          minWidth={260}
+          className="max-h-[min(400px,60vh)] overflow-y-auto rounded border-[0.83px] border-[#ddd] bg-white shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1),0_8px_10px_-6px_rgba(0,0,0,0.1)]"
+        >
           <div className="sticky top-0 flex items-center justify-between gap-2 border-b-[0.83px] border-[#f1f5f9] bg-white p-4">
             <span className="whitespace-nowrap text-sm font-medium leading-[21px] text-[#333]">Select a location</span>
             <span className="whitespace-nowrap rounded-md bg-[#f1f5f9] px-2 py-1 text-xs font-medium leading-[18px] text-[#475569]">
@@ -199,7 +207,7 @@ export function AirportCombobox({
               </li>
             ))}
           </ul>
-        </div>
+        </Floating>
       )}
     </div>
   );

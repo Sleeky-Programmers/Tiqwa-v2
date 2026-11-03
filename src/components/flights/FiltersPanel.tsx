@@ -26,7 +26,7 @@ function Section({ title, onClear, children }: { title: string; onClear?: () => 
       <div className="mb-3 flex items-center justify-between">
         <h3 className="font-display text-base font-normal uppercase text-[#1d1d1d]">{title}</h3>
         {onClear && (
-          <button type="button" onClick={onClear} className="text-sm font-medium text-blue hover:underline">
+          <button type="button" onClick={onClear} className="link-underline text-sm font-medium text-blue">
             Clear
           </button>
         )}
@@ -38,7 +38,7 @@ function Section({ title, onClear, children }: { title: string; onClear?: () => 
 
 function CheckRow({ checked, onChange, label, price }: { checked: boolean; onChange: () => void; label: string; price?: number }) {
   return (
-    <label className="flex cursor-pointer items-start gap-2.5 py-[7px] pl-2">
+    <label className="flex cursor-pointer items-start gap-2.5 rounded-lg py-[7px] pl-2 pr-1 transition-colors duration-200 hover:bg-[rgba(2,144,222,0.06)]">
       <input type="checkbox" checked={checked} onChange={onChange} className="mt-0.5 size-4 shrink-0 cursor-pointer accent-blue" />
       <span className="min-w-0 flex-1 text-sm leading-[18.9px] text-[#212529]">{label}</span>
       {price !== undefined && <span className="shrink-0 text-sm font-medium text-[#212529]">{nairaSpaced(price)}</span>}
@@ -76,7 +76,7 @@ export function FiltersPanel({
     >
       <div className="flex items-center justify-between border-b border-[#eef1f5] pb-3 pt-3.5">
         <span className="text-[15px] font-bold tracking-[0.04em] text-ink-900">FILTER</span>
-        <button type="button" onClick={() => onChange(emptyFilters)} className="text-[13px] font-semibold text-blue hover:underline">
+        <button type="button" onClick={() => onChange(emptyFilters)} className="link-underline text-[13px] font-semibold text-blue">
           Clear All
         </button>
       </div>

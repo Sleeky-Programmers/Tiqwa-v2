@@ -16,7 +16,7 @@ type Props = {
 
 export function Button({ variant = "primary", className, ...props }: Props) {
   const cls = cn(
-    "inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-bold transition active:scale-[0.98]",
+    "press inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-bold",
     variants[variant],
     className,
   );

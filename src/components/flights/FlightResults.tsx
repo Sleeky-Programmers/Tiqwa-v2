@@ -248,7 +248,7 @@ export function FlightResults({ variant = "site" }: { variant?: "site" | "dashbo
                   <button
                     type="button"
                     onClick={() => setVisible((v) => v + PAGE)}
-                    className="rounded-xl border-[1.5px] border-blue bg-white px-7 py-3 text-sm font-bold text-blue transition hover:bg-sky-50"
+                    className="press rounded-xl border-[1.5px] border-blue bg-white px-7 py-3 text-sm font-bold text-blue hover:bg-sky-50"
                   >
                     Show more flights ({list.length - visible} more)
                   </button>

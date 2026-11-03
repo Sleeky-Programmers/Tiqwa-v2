@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { cn } from "@/lib/utils";
-import { fieldBox, labelCls, useOutsideClose, valueCls } from "./shared";
+import { fieldBox, Floating, labelCls, useOutsideClose, valueCls } from "./shared";
 
 /* Dates are handled as "YYYY-MM-DD" strings in local time. */
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -101,7 +101,8 @@ export function DatePicker({
   const [focused, setFocused] = useState("");
   const gridRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const ref = useOutsideClose<HTMLDivElement>(() => setOpen(false));
+  const popRef = useRef<HTMLDivElement>(null);
+  const ref = useOutsideClose<HTMLDivElement>(() => setOpen(false), popRef);
 
   const isDisabled = (iso: string) => (min ? iso < min : false) || (max ? iso > max : false);
 
@@ -117,7 +118,7 @@ export function DatePicker({
 
   // Move keyboard focus to the focused day while open.
   useEffect(() => {
-    if (open && focused) gridRef.current?.querySelector<HTMLElement>(`[data-date="${focused}"]`)?.focus();
+    if (open && focused) gridRef.current?.querySelector<HTMLElement>(`[data-date="${focused}"]`)?.focus({ preventScroll: true });
   }, [open, focused, view]);
 
   const select = (iso: string) => {
@@ -193,13 +194,25 @@ export function DatePicker({
       <input type="hidden" name={name} value={value} />
 
       {open && view && (
-        <div
+        <Floating
+          anchorRef={triggerRef}
+          floatingRef={popRef}
+          gap={10}
+          minWidth={250}
           role="dialog"
           aria-label={`Choose ${title.toLowerCase()} date`}
-          className="absolute inset-x-0 top-full z-40 mt-[10px] rounded-[4.8px] border-[0.83px] border-[#aeaeae] bg-white text-[12.8px] text-black"
+          className="rounded-[4.8px] border-[0.83px] border-[#aeaeae] bg-white text-[12.8px] text-black shadow-[0_18px_45px_rgba(15,23,42,0.14)]"
         >
-          {/* Arrow pointing at the field */}
-          <span aria-hidden className="absolute -top-[8px] left-[50px] size-[14px] rotate-45 border-l-[0.83px] border-t-[0.83px] border-[#aeaeae] bg-[#f0f0f0]" />
+          {(placement) => (
+          <>
+          {/* Arrow pointing at the field, on whichever edge faces it */}
+          <span
+            aria-hidden
+            className={cn(
+              "absolute left-[50px] z-[1] size-[14px] border-[#aeaeae]",
+              placement === "bottom" ? "-top-[8px] rotate-45 border-l-[0.83px] border-t-[0.83px] bg-[#f0f0f0]" : "-bottom-[8px] rotate-[225deg] border-l-[0.83px] border-t-[0.83px] bg-white",
+            )}
+          />
 
           <div className="relative rounded-t-[4.8px] border-b-[0.83px] border-[#aeaeae] bg-[#f0f0f0] pt-2">
             {canPrev && (
@@ -323,7 +336,9 @@ export function DatePicker({
               ))}
             </div>
           )}
-        </div>
+          </>
+          )}
+        </Floating>
       )}
     </div>
   );

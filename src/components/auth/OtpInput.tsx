@@ -49,7 +49,7 @@ export function OtpInput({ value, onChange, invalid, length = 6 }: { value: stri
           }}
           onFocus={(e) => e.target.select()}
           className={cn(
-            "h-14 w-full min-w-0 rounded-xl border bg-white text-center font-display text-2xl font-extrabold text-ink-900 transition focus:border-blue focus:outline-none focus:ring-2 focus:ring-blue/20",
+            "h-14 w-full min-w-0 rounded-xl border bg-white text-center font-display text-2xl font-extrabold text-ink-900 transition duration-200 focus:-translate-y-0.5 focus:border-blue focus:outline-none focus:ring-2 focus:ring-blue/20 motion-reduce:focus:translate-y-0",
             invalid ? "border-error" : d ? "border-blue" : "border-[#e4e8ee]",
           )}
         />
