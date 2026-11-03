@@ -23,7 +23,8 @@ export const travellerFromProfile = (u: UserProfile): Partial<Traveller> => ({
   firstName: u.firstName,
   middleName: u.middleName,
   surname: u.surname,
-  gender: u.gender,
+  // Bookings only accept Male/Female; anything else saved earlier is left for the traveller to pick.
+  gender: u.gender === "Male" || u.gender === "Female" ? u.gender : "",
   dob: u.dob,
   country: u.country,
   phone: u.phone,

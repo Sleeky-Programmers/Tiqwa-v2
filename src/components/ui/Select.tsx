@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useRef, useState } from "react";
-import { Chevron, fieldBox, placementCls, useFlipPlacement, useOutsideClose } from "@/components/home/search/shared";
+import { Chevron, fieldBox, Floating, useOutsideClose } from "@/components/home/search/shared";
 import { cn } from "@/lib/utils";
 
 export type SelectOption = { value: string; label: string; description?: string };
@@ -37,10 +37,9 @@ export function Select({
   const current = items.find((o) => o.value === value);
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
-  const ref = useOutsideClose<HTMLDivElement>(() => setOpen(false));
+  const menuRef = useRef<HTMLDivElement>(null);
+  const ref = useOutsideClose<HTMLDivElement>(() => setOpen(false), menuRef);
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const menuRef = useRef<HTMLUListElement>(null);
-  const placement = useFlipPlacement(open, triggerRef, menuRef);
 
   const openMenu = () => {
     setActive(Math.max(0, items.findIndex((o) => o.value === value)));
@@ -84,15 +83,12 @@ export function Select({
       </button>
       {name && <input type="hidden" name={name} value={value} />}
       {open && (
+        <Floating anchorRef={triggerRef} floatingRef={menuRef}>
         <ul
-          ref={menuRef}
           id={`${id}-list`}
           role="listbox"
           aria-label={label}
-          className={cn(
-            "absolute inset-x-0 z-30 space-y-1 rounded-xl border border-[#e2e8f0] bg-white p-3 shadow-[0_18px_45px_rgba(15,23,42,0.16)]",
-            placementCls(placement),
-          )}
+          className="max-h-[min(360px,60vh)] space-y-1 overflow-y-auto rounded-xl border border-[#e2e8f0] bg-white p-3 shadow-[0_18px_45px_rgba(15,23,42,0.16)]"
         >
           {items.map((o, i) => {
             const selected = o.value === value;
@@ -125,6 +121,7 @@ export function Select({
             );
           })}
         </ul>
+        </Floating>
       )}
     </div>
   );

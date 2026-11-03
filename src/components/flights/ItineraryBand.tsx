@@ -66,7 +66,7 @@ export function ItineraryBand({
             <button
               type="button"
               onClick={onAction}
-              className="shrink-0 rounded-full bg-white px-[22px] py-2.5 text-sm font-bold leading-[14px] text-[#014e78] transition hover:bg-sky-50"
+              className="press shrink-0 rounded-full bg-white px-[22px] py-2.5 text-sm font-bold leading-[14px] text-[#014e78] hover:bg-sky-50"
             >
               {actionLabel}
             </button>

@@ -34,7 +34,7 @@ export const typeInfo = {
   child: { label: "Child", age: "2–11 years", dobHint: "2–11 years old on the travel date", titles: ["Master", "Miss"] },
   infant: { label: "Infant", age: "Under 2 years", dobHint: "Under 2 years old on the travel date", titles: ["Master", "Miss"] },
 } as const;
-const genders = ["Male", "Female", "Other"];
+const genders = ["Male", "Female"];
 
 const shift = (iso: string, years: number, days = 0) => {
   const [y, m, d] = iso.split("-").map(Number);

@@ -84,7 +84,8 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <div className="mb-8 lg:hidden">
           <Logo tone="dark" width={120} />
         </div>
-        <div className="mx-auto my-auto w-full max-w-[440px] animate-[rise-in_0.5s_cubic-bezier(0.16,1,0.3,1)]">{children}</div>
+        {/* The page transition (rise on every navigation) lives in (auth)/template.tsx. */}
+        <div className="mx-auto my-auto w-full max-w-[440px]">{children}</div>
       </section>
     </main>
   );

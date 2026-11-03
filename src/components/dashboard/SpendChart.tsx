@@ -56,7 +56,8 @@ export function SpendChart({ data }: { data: MonthPoint[] }) {
               {h > 0 && (
                 <path
                   d={`M${x},${PAD.top + plotH} V${top + r} Q${x},${top} ${x + r},${top} H${x + BAR - r} Q${x + BAR},${top} ${x + BAR},${top + r} V${PAD.top + plotH} Z`}
-                  className="transition-opacity"
+                  className="bar-grow transition-opacity"
+                  style={{ animationDelay: `${i * 45}ms` }}
                   fill="#0290de"
                   opacity={hover === null || active ? 1 : 0.45}
                 />

@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useRef, useState } from "react";
-import { Chevron, placementCls, useFlipPlacement, useOutsideClose } from "@/components/home/search/shared";
+import { Chevron, Floating, useOutsideClose } from "@/components/home/search/shared";
 import { countries, flag, getCountry } from "@/data/countries";
 import { cn } from "@/lib/utils";
 
@@ -28,10 +28,9 @@ export function CountryPicker({
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
   const [active, setActive] = useState(0);
-  const ref = useOutsideClose<HTMLDivElement>(() => setOpen(false));
-  const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
-  const placement = useFlipPlacement(open, triggerRef, menuRef);
+  const ref = useOutsideClose<HTMLDivElement>(() => setOpen(false), menuRef);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const current = getCountry(value);
   const text = (c: { name: string; dial: string }) => (variant === "dial" ? `${c.name} (${c.dial})` : c.name);
   const term = q.trim().toLowerCase();
@@ -78,9 +77,11 @@ export function CountryPicker({
         </span>
       </button>
       {open && (
-        <div
-          ref={menuRef}
-          className={cn("absolute inset-x-0 z-30 overflow-hidden rounded-xl border border-[#e2e8f0] bg-white shadow-[0_18px_45px_rgba(15,23,42,0.16)]", placementCls(placement))}
+        <Floating
+          anchorRef={triggerRef}
+          floatingRef={menuRef}
+          minWidth={240}
+          className="overflow-hidden rounded-xl border border-[#e2e8f0] bg-white shadow-[0_18px_45px_rgba(15,23,42,0.16)]"
         >
           <div className="border-b border-[#eef2f6] p-2">
             <input
@@ -135,7 +136,7 @@ export function CountryPicker({
               </li>
             ))}
           </ul>
-        </div>
+        </Floating>
       )}
     </div>
   );

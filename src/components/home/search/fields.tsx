@@ -3,7 +3,7 @@
 import { useId, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Select } from "@/components/ui/Select";
-import { Chevron, fieldBox, labelCls, placementCls, useFlipPlacement, useOutsideClose } from "./shared";
+import { Chevron, fieldBox, Floating, labelCls, useOutsideClose } from "./shared";
 
 export { AirportCombobox } from "./AirportCombobox";
 export { DatePicker } from "./DatePicker";
@@ -32,10 +32,9 @@ const stepBtn =
 export function TravellersField({ value, onChange, className }: { value: Pax; onChange: (p: Pax) => void; className?: string }) {
   const id = useId();
   const [open, setOpen] = useState(false);
-  const ref = useOutsideClose<HTMLDivElement>(() => setOpen(false));
-  const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
-  const placement = useFlipPlacement(open, triggerRef, panelRef);
+  const ref = useOutsideClose<HTMLDivElement>(() => setOpen(false), panelRef);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const total = value.adults + value.children + value.infants;
   const max = (key: keyof Pax) => (key === "infants" ? Math.min(MAX_PER_TYPE, value.adults) : MAX_PER_TYPE);
   const set = (key: keyof Pax, delta: number, min: number) => {
@@ -64,11 +63,13 @@ export function TravellersField({ value, onChange, className }: { value: Pax; on
           </span>
         </button>
         {open && (
-          <div
-            ref={panelRef}
+          <Floating
+            anchorRef={triggerRef}
+            floatingRef={panelRef}
+            minWidth={280}
             role="dialog"
             aria-label="Select passengers"
-            className={cn(placementCls(placement), "absolute inset-x-0 z-30 rounded-2xl bg-white px-4 pb-5 pt-[22px] shadow-[0_18px_45px_rgba(15,23,42,0.16)] sm:px-[22px]")}
+            className="rounded-2xl bg-white px-4 pb-5 pt-[22px] shadow-[0_18px_45px_rgba(15,23,42,0.16)] sm:px-[22px]"
           >
             <h3 className="border-b border-[#eef2f6] pb-4 text-base font-bold text-[#1e293b]">Select Passengers</h3>
             <ul>
@@ -108,7 +109,7 @@ export function TravellersField({ value, onChange, className }: { value: Pax; on
               <span className="text-[15px] text-[#334155]">Total Passengers</span>
               <span className="text-[15px] font-bold text-blue">{total}</span>
             </div>
-          </div>
+          </Floating>
         )}
       </div>
     </div>
