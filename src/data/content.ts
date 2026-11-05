@@ -18,7 +18,7 @@ export const services = [
   {
     title: "Proof of Funds",
     body: "TBIL Travels helps you secure Proof of Funds and statement of account at a cost-effective rate with no stress involved.",
-    href: "/contact",
+    href: "/contact?type=funds",
     image: "/images/services/pof.jpg",
     icon: "landmark",
     accent: "orange",
