@@ -71,7 +71,7 @@ const tripOptions: { id: Trip; label: string }[] = [
 
 const other: Record<string, { text: string; cta: string; href: string }> = {
   hotels: { text: "Hotel booking is coming soon. Talk to our team and we'll book it for you.", cta: "Contact us", href: "/contact?type=hotel" },
-  holiday: { text: "Looking for a holiday package? Our travel experts will put one together for you.", cta: "Plan my holiday", href: "/contact?type=holiday" },
+  holiday: { text: "Curated getaways with flights, stays and experiences. Browse our packages, or let our experts plan one for you.", cta: "Browse holiday packages", href: "/holiday-packages" },
   properties: { text: "Browse verified homes, list your property, and connect with trustworthy buyers or renters.", cta: "Visit TBiLS Properties", href: "https://www.tbilprop.com/" },
   study: { text: "Expert advisory and application support to help you study abroad with confidence.", cta: "Start my application", href: "/contact?type=study" },
 };

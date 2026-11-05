@@ -102,6 +102,18 @@ export async function remember<T>(key: string, value: T, ttlSec = DAY) {
   }
 }
 
+/**
+ * Counts attempts per key in a fixed window; true while under `max`. Used to slow down guessing on
+ * public lookups. Best effort: the count isn't atomic across instances, which is fine for this.
+ */
+export async function underLimit(key: string, max: number, windowSec: number) {
+  const now = Date.now();
+  const cur = await recall<{ n: number; until: number }>(`limit:${key}`);
+  const entry = cur && cur.until > now ? { n: cur.n + 1, until: cur.until } : { n: 1, until: now + windowSec * 1000 };
+  await remember(`limit:${key}`, entry, Math.max(1, Math.ceil((entry.until - now) / 1000)));
+  return entry.n <= max;
+}
+
 /** Identical calls already running in this process share one promise. */
 export function singleFlight<T>(key: string, fn: () => Promise<T>): Promise<T> {
   const running = flights.get(key) as Promise<T> | undefined;

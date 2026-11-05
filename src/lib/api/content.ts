@@ -80,6 +80,12 @@ export async function getHolidayPackages(): Promise<HolidayPackage[]> {
   return (home?.holiday_packages ?? []).map(toPackage);
 }
 
+/** Every published package (GET /holiday-packages), for the listing page; falls back to the home page's list. */
+export async function getAllHolidayPackages(): Promise<HolidayPackage[]> {
+  const all = await publicData<WlHolidayPackage[]>("/holiday-packages");
+  return Array.isArray(all) && all.length ? all.map(toPackage) : getHolidayPackages();
+}
+
 export async function getHolidayPackage(slug: string): Promise<{ pkg: HolidayPackage; related: HolidayPackage[] } | null> {
   const data = await publicData<{ package?: WlHolidayPackage; related_packages?: WlHolidayPackage[] }>(`/holiday-packages/${encodeURIComponent(slug)}/details`);
   if (!data?.package) return null;

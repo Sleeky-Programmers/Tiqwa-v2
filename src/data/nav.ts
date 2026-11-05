@@ -14,8 +14,9 @@ export const footerColumns = [
       { label: "Domestic flights", href: "/flights" },
       { label: "International flights", href: "/flights" },
       { label: "Installment payment plan", href: "/flights" },
-      { label: "Visa assistance", href: "/contact" },
-      { label: "Proof of funds", href: "/contact" },
+      { label: "Holiday packages", href: "/holiday-packages" },
+      { label: "Visa assistance", href: "/contact?type=visa" },
+      { label: "Proof of funds", href: "/contact?type=funds" },
     ],
   },
   {
@@ -33,6 +34,7 @@ export const footerColumns = [
     title: "Company",
     links: [
       { label: "About TBILS", href: "/about" },
+      { label: "Manage booking", href: "/manage-booking" },
       { label: "Contact us", href: "/contact" },
       { label: "FAQs", href: "/faq" },
       { label: "Blog", href: "/blog" },
@@ -51,9 +53,10 @@ export const footerColumns = [
 /** Mobile drawer items (as on tbils.com). */
 export const mobileNav = [
   { label: "Cheap Flights", href: "/cheap-flight-deals" },
+  { label: "Holiday Packages", href: "/holiday-packages" },
   { label: "Study Abroad", href: "/contact?type=study" },
   { label: "Visa & Travel", href: "/contact?type=visa" },
-  { label: "Manage Booking", href: "/contact?type=booking" },
+  { label: "Manage Booking", href: "/manage-booking" },
   { label: "About Us", href: "/about" },
   { label: "Properties", href: "https://www.tbilprop.com/" },
   { label: "Blog", href: "/blog" },

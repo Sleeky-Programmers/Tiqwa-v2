@@ -8,14 +8,51 @@ import { Select } from "@/components/ui/Select";
 import { useProfile } from "@/lib/account";
 import { cn } from "@/lib/utils";
 
-const SUBJECTS = ["New flight booking", "Change or cancel a booking", "Pay small small", "Payment issue", "Visa & study abroad", "Something else"];
+const SUBJECTS = [
+  "New flight booking",
+  "Change or cancel a booking",
+  "Pay small small",
+  "Payment issue",
+  "Holiday package",
+  "Hotel booking",
+  "Visa assistance",
+  "Study abroad",
+  "Proof of funds",
+  "Something else",
+];
 
-/** Contact form → /api/contact (backend /send-message). Prefills from the signed-in account and ?subject=. */
+/** `?type=` values used by menu, footer and search-tab links, and the subject each one pre-selects. */
+const TYPE_SUBJECT: Record<string, string> = {
+  flight: "New flight booking",
+  booking: "Change or cancel a booking",
+  flexi: "Pay small small",
+  payment: "Payment issue",
+  holiday: "Holiday package",
+  hotel: "Hotel booking",
+  visa: "Visa assistance",
+  study: "Study abroad",
+  funds: "Proof of funds",
+};
+
+/** A nudge in the message box for the chosen topic. */
+const MESSAGE_HINT: Record<string, string> = {
+  "Holiday package": "Where would you like to go, when, and how many travellers?",
+  "Hotel booking": "City, check-in and check-out dates, number of guests and rooms.",
+  "Visa assistance": "Which country, your travel dates and your nationality.",
+  "Study abroad": "The country and course you're interested in, and when you'd like to start.",
+  "Proof of funds": "Which embassy or school it's for and the amount required.",
+  "Change or cancel a booking": "Your booking reference (it starts with TW-) and what you'd like to change.",
+};
+
+/**
+ * Contact form → /api/contact (backend /send-message). Prefills from the signed-in account, and the
+ * topic from ?subject= (free text, e.g. a holiday package name) or ?type= (one of TYPE_SUBJECT).
+ */
 export function ContactForm() {
   const id = useId();
   const user = useProfile();
   const params = useSearchParams();
-  const preset = params.get("subject") ?? "";
+  const preset = params.get("subject") ?? TYPE_SUBJECT[params.get("type") ?? ""] ?? "";
   const [v, setV] = useState({ name: "", email: "", phone: "", subject: preset || "", message: "" });
   const [errors, setErrors] = useState<Errors>({});
   const [busy, setBusy] = useState(false);
@@ -83,7 +120,7 @@ export function ContactForm() {
               rows={5}
               value={v.message}
               onChange={(e) => set({ message: e.target.value })}
-              placeholder="Your route, dates, number of travellers or booking reference…"
+              placeholder={MESSAGE_HINT[v.subject] ?? "Your route, dates, number of travellers or booking reference…"}
               className={cn(inputCls, "h-auto py-3", errors.message && "border-error")}
             />
           </Field>
