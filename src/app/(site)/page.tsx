@@ -1,16 +1,14 @@
 import { DealsSection } from "@/components/home/DealsSection";
 import { FaqSection } from "@/components/home/FaqSection";
 import { Hero } from "@/components/home/Hero";
-import { NewsletterSection } from "@/components/home/NewsletterSection";
 import { FlightExplorer } from "@/components/home/FlightExplorer";
 import { HolidayPackages } from "@/components/home/HolidayPackages";
-import { WelcomeOffer } from "@/components/layout/WelcomeOffer";
 import { PartnersStrip, PromoBanner, ServicesBand, WhyTbils } from "@/components/home/Sections";
 import { faqs } from "@/data/content";
-import { contact } from "@/data/contact";
+import { getContact, getPartners } from "@/lib/api/site";
 import { site } from "@/data/site";
 
-const jsonLd = {
+const jsonLd = (contact: Awaited<ReturnType<typeof getContact>>) => ({
   "@context": "https://schema.org",
   "@graph": [
     {
@@ -19,7 +17,7 @@ const jsonLd = {
       url: site.url,
       telephone: contact.phone.display,
       email: contact.email.display,
-      address: { "@type": "PostalAddress", streetAddress: contact.address.line1, addressLocality: contact.address.city, addressCountry: "NG" },
+      address: { "@type": "PostalAddress", streetAddress: contact.address.display, addressCountry: "NG" },
     },
     {
       "@type": "FAQPage",
@@ -30,9 +28,10 @@ const jsonLd = {
       })),
     },
   ],
-};
+});
 
-export default function Home() {
+export default async function Home() {
+  const [contact, partners] = await Promise.all([getContact(), getPartners()]);
   return (
     <>
       <Hero />
@@ -40,13 +39,11 @@ export default function Home() {
       <PromoBanner />
       <HolidayPackages />
       <ServicesBand />
-      <PartnersStrip />
+      <PartnersStrip partners={partners} />
       <WhyTbils />
       <FaqSection />
-      <NewsletterSection />
       <FlightExplorer />
-      <WelcomeOffer />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd(contact)) }} />
     </>
   );
 }

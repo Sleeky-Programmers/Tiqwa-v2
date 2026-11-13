@@ -69,7 +69,14 @@ const BAG = /checked\s*\(([^)]+)\)/i;
 const CABIN = /cabin\s*\(([^)]+)\)/i;
 
 function fareRules(segments: WlSegment[]): FlightOffer["fareRules"] {
-  const notes = [...new Set(segments.flatMap((s) => s.fare_rules ?? []).map((n) => n.trim()).filter(Boolean))];
+  const notes = [
+    ...new Set(
+      segments
+        .flatMap((s) => s.fare_rules ?? [])
+        .map((n) => n.trim())
+        .filter(Boolean),
+    ),
+  ];
   const refundable = segments.length > 0 && segments.every((s) => s.refundable);
   const baggage = segments.find((s) => s.baggage)?.baggage ?? "";
   const checked = BAG.exec(baggage)?.[1] ?? (baggage.replace(/^baggage allowance:\s*/i, "") || "As per airline policy");

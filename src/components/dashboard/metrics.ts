@@ -4,16 +4,14 @@ import { bookingTotals } from "@/lib/booking/pricing";
 import { distanceKm } from "@/lib/flights/geo";
 import type { MonthPoint } from "./SpendChart";
 
-const paidAmount = (b: HistoryBooking) => (b.status === "cancelled" || b.payment.status !== "confirmed" ? 0 : b.live ? b.payment.amount : bookingTotals(b).total);
+const paidAmount = (b: HistoryBooking) =>
+  b.status === "cancelled" || b.payment.status !== "confirmed" ? 0 : b.live ? b.payment.amount : bookingTotals(b).total;
 
 /** Everything the dashboard home shows, derived from the booking list. */
 export function dashboardMetrics(bookings: HistoryBooking[]) {
   const upcoming = bookings.filter(isUpcoming).sort((a, b) => firstDeparture(a).localeCompare(firstDeparture(b)));
   const completed = bookings.filter((b) => b.status === "completed");
-  const km = completed.reduce(
-    (s, b) => s + b.offer.journeys.flatMap((j) => j.segments).reduce((t, seg) => t + distanceKm(seg.from.code, seg.to.code), 0),
-    0,
-  );
+  const km = completed.reduce((s, b) => s + b.offer.journeys.flatMap((j) => j.segments).reduce((t, seg) => t + distanceKm(seg.from.code, seg.to.code), 0), 0);
   const countries = new Set(completed.flatMap((b) => b.offer.journeys.map((j) => getAirport(j.to.code)?.country)).filter(Boolean));
   const year = new Date().getFullYear();
   const spentThisYear = bookings.filter((b) => b.bookedAt?.startsWith(String(year))).reduce((s, b) => s + paidAmount(b), 0);

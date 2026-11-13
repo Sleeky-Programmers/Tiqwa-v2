@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { LivePayment } from "./LivePayment";
+import { LivePayment, type LiveChoice } from "./LivePayment";
 import { Modal } from "@/components/ui/Modal";
 import { bankTransfer } from "@/data/booking";
 import { bookingTotals } from "@/lib/booking/pricing";
@@ -25,7 +25,7 @@ export function PaymentStep({
 }: {
   draft: BookingDraft;
   onPay: (method: PayMethod, reference?: string) => void;
-  onPayLive: (choice: import("./LivePayment").LiveChoice) => void;
+  onPayLive: (choice: LiveChoice) => void;
 }) {
   if (draft.live) return <LivePayment draft={draft} onPay={onPayLive} />;
   return <DemoPayment draft={draft} onPay={onPay} />;
@@ -68,7 +68,17 @@ function DemoPayment({ draft, onPay }: { draft: BookingDraft; onPay: (method: Pa
               method === id ? "bg-white text-blue shadow-[0_1px_2px_rgba(16,40,68,0.06),0_4px_12px_rgba(2,144,222,0.12)]" : "text-ink-500 hover:text-ink-900",
             )}
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden
+            >
               {icon}
             </svg>
             {label}
@@ -143,8 +153,8 @@ function DemoPayment({ draft, onPay }: { draft: BookingDraft; onPay: (method: Pa
             </div>
           </div>
           <label className="my-[18px] flex cursor-pointer items-center gap-2.5 text-sm font-medium text-ink-900">
-            <input type="checkbox" checked={sent} onChange={(e) => setSent(e.target.checked)} className="size-[18px] cursor-pointer accent-blue" />
-            I have sent the money
+            <input type="checkbox" checked={sent} onChange={(e) => setSent(e.target.checked)} className="size-[18px] cursor-pointer accent-blue" />I have sent
+            the money
           </label>
           <button
             type="button"
@@ -202,7 +212,9 @@ function MockPaystack({
   return (
     <Modal open={open} onClose={onClose} labelledBy="paystack-title" className="max-w-[400px]">
       <div className="px-6 pb-6 pt-7 text-center">
-        <span className="mb-3 inline-block rounded-full bg-[#fff7ed] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-[#c2410c]">Test mode</span>
+        <span className="mb-3 inline-block rounded-full bg-[#fff7ed] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-[#c2410c]">
+          Test mode
+        </span>
         <h2 id="paystack-title" className="font-display text-xl font-extrabold text-ink-900">
           Paystack checkout (mock)
         </h2>

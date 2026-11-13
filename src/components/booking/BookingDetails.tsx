@@ -3,7 +3,6 @@
 import Image from "next/image";
 import type { ReactNode } from "react";
 import { Check, X } from "lucide-react";
-import { outlineBtn } from "@/components/dashboard/ui";
 import { airlineLogo } from "@/components/flights/FlightCard";
 import { formatDmy } from "@/components/home/search/DatePicker";
 import { getCountry } from "@/data/countries";
@@ -46,7 +45,9 @@ function Timeline({ b }: { b: HistoryBooking }) {
             {s.bad ? <X className="size-3.5" /> : s.done ? <Check className="size-3.5" /> : <span className="size-1.5 rounded-full bg-current" />}
           </span>
           <span className="mt-2 text-xs font-bold text-ink-900">{s.label}</span>
-          <span className="text-[11px] text-ink-500">{s.date ? new Date(s.date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—"}</span>
+          <span className="text-[11px] text-ink-500">
+            {s.date ? new Date(s.date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—"}
+          </span>
         </li>
       ))}
     </ol>
@@ -187,29 +188,5 @@ export function BookingDetailsBody({ b }: { b: HistoryBooking }) {
         </dl>
       </Block>
     </>
-  );
-}
-
-export function CancelDialog({ onKeep, onCancel, refundNote, live }: { onKeep: () => void; onCancel: () => void; refundNote: string; live: boolean }) {
-  return (
-    <div className="fixed inset-0 z-[2450] grid place-items-center bg-[rgba(5,20,35,0.66)] p-6 animate-[fade-in_0.18s_ease-out]">
-      <div role="alertdialog" aria-modal="true" aria-labelledby="cancel-title" className="w-full max-w-[420px] rounded-[18px] bg-white px-7 pb-6 pt-8 text-center shadow-[0_24px_60px_rgba(1,20,45,0.28)] animate-[modal-in_0.18s_ease]">
-        <span className="mx-auto mb-4 grid size-12 place-items-center rounded-full bg-[#fee2e2] text-xl font-bold text-error">!</span>
-        <h2 id="cancel-title" className="mb-2 font-display text-xl font-extrabold text-ink-900">
-          {live ? "Request a cancellation?" : "Cancel this booking?"}
-        </h2>
-        <p className="mb-6 text-[15px] leading-[1.5] text-[#4b5563]">
-          {live ? "We'll send your request to our support team, who'll confirm by email." : "This can't be undone."} Fare rule: {refundNote}.
-        </p>
-        <div className="flex gap-3">
-          <button type="button" autoFocus onClick={onKeep} className={cn(outlineBtn, "flex-1")}>
-            Keep booking
-          </button>
-          <button type="button" onClick={onCancel} className="flex-1 rounded-xl bg-error py-2.5 text-sm font-bold text-white transition hover:opacity-90">
-            {live ? "Send request" : "Yes, cancel"}
-          </button>
-        </div>
-      </div>
-    </div>
   );
 }

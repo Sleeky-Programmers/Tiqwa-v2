@@ -76,16 +76,59 @@ type Seed = {
 };
 
 const seeds: Seed[] = [
-  { ref: "TBX4QL", trip: "round", route: ["LOS", "LHR"], departIn: 9, stay: 14, pick: 1, status: "confirmed", bookedDaysBefore: 34, addons: ["travel-insurance"] },
+  {
+    ref: "TBX4QL",
+    trip: "round",
+    route: ["LOS", "LHR"],
+    departIn: 9,
+    stay: 14,
+    pick: 1,
+    status: "confirmed",
+    bookedDaysBefore: 34,
+    addons: ["travel-insurance"],
+  },
   { ref: "TBK7MA", trip: "oneway", route: ["LOS", "ABV"], departIn: 3, pick: 0, status: "confirmed", bookedDaysBefore: 6 },
   { ref: "TBP2DX", trip: "round", route: ["ABV", "DXB"], departIn: 27, stay: 7, adults: 2, pick: 2, status: "hold", bookedDaysBefore: 0 },
   { ref: "TBR9AC", trip: "oneway", route: ["LOS", "ACC"], departIn: 41, pick: 0, status: "pending", bookedDaysBefore: 1 },
-  { ref: "TBC5YZ", trip: "round", route: ["LOS", "YYZ"], departIn: 64, stay: 21, adults: 2, children: 1, pick: 3, status: "confirmed", bookedDaysBefore: 12, addons: ["flight-reminder"] },
+  {
+    ref: "TBC5YZ",
+    trip: "round",
+    route: ["LOS", "YYZ"],
+    departIn: 64,
+    stay: 21,
+    adults: 2,
+    children: 1,
+    pick: 3,
+    status: "confirmed",
+    bookedDaysBefore: 12,
+    addons: ["flight-reminder"],
+  },
   { ref: "TBN1PH", trip: "oneway", route: ["LOS", "PHC"], departIn: -12, pick: 1, status: "completed", bookedDaysBefore: 20 },
   { ref: "TBD8NB", trip: "round", route: ["LOS", "NBO"], departIn: -48, stay: 6, pick: 0, status: "completed", bookedDaysBefore: 70 },
-  { ref: "TBQ3DO", trip: "round", route: ["ABV", "DOH"], departIn: -95, stay: 10, adults: 2, pick: 1, status: "completed", bookedDaysBefore: 120, addons: ["car-hire"] },
+  {
+    ref: "TBQ3DO",
+    trip: "round",
+    route: ["ABV", "DOH"],
+    departIn: -95,
+    stay: 10,
+    adults: 2,
+    pick: 1,
+    status: "completed",
+    bookedDaysBefore: 120,
+    addons: ["car-hire"],
+  },
   { ref: "TBF6CD", trip: "oneway", route: ["LOS", "CDG"], departIn: -140, pick: 2, status: "cancelled", bookedDaysBefore: 160 },
-  { ref: "TBJ2NY", trip: "round", route: ["LOS", "JFK"], departIn: -205, stay: 18, pick: 0, status: "completed", bookedDaysBefore: 240, addons: ["travel-insurance"] },
+  {
+    ref: "TBJ2NY",
+    trip: "round",
+    route: ["LOS", "JFK"],
+    departIn: -205,
+    stay: 18,
+    pick: 0,
+    status: "completed",
+    bookedDaysBefore: 240,
+    addons: ["travel-insurance"],
+  },
   { ref: "TBL4KN", trip: "oneway", route: ["ABV", "KAN"], departIn: -260, pick: 0, status: "completed", bookedDaysBefore: 268 },
   { ref: "TBI0IS", trip: "round", route: ["LOS", "IST"], departIn: -318, stay: 9, pick: 1, status: "completed", bookedDaysBefore: 350 },
 ];
@@ -120,7 +163,7 @@ function fromSeed(s: Seed): HistoryBooking | null {
     payment: {
       method: s.status === "hold" ? "hold" : s.status === "pending" ? "bank" : "paystack",
       status: paid ? "confirmed" : s.status === "pending" ? "processing" : "reserved",
-      transactionRef: paid ? `T${hash(s.ref + "tx")}` : null,
+      transactionRef: paid ? `T${hash(`${s.ref}tx`)}` : null,
       paidAt: paid ? bookedAt.toISOString() : null,
       amount: paid ? t.payable : t.total,
       fee: paid ? t.gatewayFee : 0,
@@ -136,7 +179,7 @@ function hash(s: string) {
   return (h >>> 0) % 1e10;
 }
 
-const read = <T,>(key: string, fallback: T): T => {
+const read = <T>(key: string, fallback: T): T => {
   try {
     const raw = localStorage.getItem(key);
     return raw ? (JSON.parse(raw) as T) : fallback;

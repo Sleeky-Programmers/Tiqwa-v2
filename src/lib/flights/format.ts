@@ -15,12 +15,10 @@ const toDate = (local: string) => {
 export const dayDiff = (from: string, to: string) => Math.round((toDate(to).getTime() - toDate(from).getTime()) / 86_400_000);
 
 /** "Mon, Oct 26, 2026" */
-export const fmtLongDate = (local: string) =>
-  toDate(local).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
+export const fmtLongDate = (local: string) => toDate(local).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
 
 /** "26 Oct 2026" */
-export const fmtShortDate = (local: string) =>
-  toDate(local).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+export const fmtShortDate = (local: string) => toDate(local).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 
 export const naira = (n: number) => `₦${Math.round(n).toLocaleString("en-NG")}`;
 /** "₦ 726,025" — spaced variant tbils.com uses in filters and summaries. */
@@ -43,8 +41,7 @@ export const paxLabel = (p: Pax) => {
 
 /** "One-way · 26 Oct 2026 · 1 Passenger · Economy" */
 export const searchMeta = (s: FlightSearch) => {
-  const dates =
-    s.trip === "round" ? `${fmtShortDate(s.legs[0].date)} – ${fmtShortDate(s.legs[1].date)}` : fmtShortDate(s.legs[0].date);
+  const dates = s.trip === "round" ? `${fmtShortDate(s.legs[0].date)} – ${fmtShortDate(s.legs[1].date)}` : fmtShortDate(s.legs[0].date);
   return [tripLabel[s.trip], dates, paxLabel(s.pax), cabinLabel[s.cabin].replace(" class", "")].join(" · ");
 };
 

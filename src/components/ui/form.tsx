@@ -13,7 +13,21 @@ export const dateField = "h-[45px] rounded-[10px] border-[#e4e8ee]";
 
 export type Errors = Record<string, string>;
 
-export function Field({ label, error, children, htmlFor, hint, aside }: { label: string; error?: string; children: ReactNode; htmlFor?: string; hint?: string; aside?: ReactNode }) {
+export function Field({
+  label,
+  error,
+  children,
+  htmlFor,
+  hint,
+  aside,
+}: {
+  label: string;
+  error?: string;
+  children: ReactNode;
+  htmlFor?: string;
+  hint?: string;
+  aside?: ReactNode;
+}) {
   return (
     <div className="min-w-0">
       <div className="flex items-baseline justify-between gap-3">

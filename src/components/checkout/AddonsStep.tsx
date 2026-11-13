@@ -22,7 +22,10 @@ export function AddonsStep({
   onToggle: (id: string) => void;
   paxCount: number;
 }) {
-  if (!addons.length) return <p className="mb-4 rounded-xl bg-tint-100 px-4 py-3.5 text-sm text-ink-500">No extras are available for this flight. You can continue to payment.</p>;
+  if (!addons.length)
+    return (
+      <p className="mb-4 rounded-xl bg-tint-100 px-4 py-3.5 text-sm text-ink-500">No extras are available for this flight. You can continue to payment.</p>
+    );
   return (
     <div>
       {addons.map((a, i) => {

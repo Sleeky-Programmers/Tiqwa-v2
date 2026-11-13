@@ -16,7 +16,9 @@ const norm = (s?: string | null) => (s ?? "").trim().toLowerCase();
  */
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
-  const reference = String(body?.reference ?? "").trim().toUpperCase();
+  const reference = String(body?.reference ?? "")
+    .trim()
+    .toUpperCase();
   const who = norm(body?.surname);
   const fields: Record<string, string> = {};
   if (!/^[A-Z0-9-]{5,20}$/.test(reference)) fields.reference = "Enter the booking reference from your confirmation, for example TW-ABC123";

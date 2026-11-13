@@ -33,10 +33,7 @@ export const destinationImage = (city?: string) => (city && cityImages[city.toLo
 
 const PlaneIcon = ({ className }: { className?: string }) => (
   <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>
-    <path
-      d="M21 16v-2l-8-5V3.5A1.5 1.5 0 0 0 11.5 2 1.5 1.5 0 0 0 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5L21 16Z"
-      fill="currentColor"
-    />
+    <path d="M21 16v-2l-8-5V3.5A1.5 1.5 0 0 0 11.5 2 1.5 1.5 0 0 0 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5L21 16Z" fill="currentColor" />
   </svg>
 );
 
@@ -110,7 +107,10 @@ export function SearchLoader({ route, destinationCity }: { route?: string; desti
         preload="metadata"
         aria-hidden
       />
-      <div aria-hidden className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(120%_90%_at_50%_0,rgba(2,144,222,0.16)_0,rgba(1,25,44,0)_60%),linear-gradient(160deg,rgba(10,22,40,0.72),rgba(7,17,32,0.78)_60%,rgba(5,12,23,0.82))]" />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(120%_90%_at_50%_0,rgba(2,144,222,0.16)_0,rgba(1,25,44,0)_60%),linear-gradient(160deg,rgba(10,22,40,0.72),rgba(7,17,32,0.78)_60%,rgba(5,12,23,0.82))]"
+      />
 
       <div className="fixed inset-x-0 top-0 z-[2] h-[3px] overflow-hidden bg-[rgba(2,144,222,0.15)]">
         <span className="absolute h-full w-[35%] animate-[indeterminate_1.15s_ease-in-out_infinite] rounded-sm bg-[linear-gradient(90deg,#0290de,#014e78)]" />
@@ -154,7 +154,17 @@ export function SearchLoader({ route, destinationCity }: { route?: string; desti
           {trust.map((t) => (
             <div key={t.title} className="flex items-center gap-[9px]">
               <span className="grid size-[34px] place-items-center rounded-[9px] bg-[rgba(2,144,222,0.1)] text-blue">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden
+                >
                   {t.icon}
                 </svg>
               </span>

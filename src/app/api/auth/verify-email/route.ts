@@ -5,7 +5,8 @@ export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
   const email = String(body?.email ?? "").trim();
   const code = String(body?.code ?? "").replace(/\D/g, "");
-  if (code.length !== 6) return fail({ code: "VALIDATION", status: 422, message: "Enter the 6-digit code.", fields: { code: "Enter the 6-digit code from your email" } });
+  if (code.length !== 6)
+    return fail({ code: "VALIDATION", status: 422, message: "Enter the 6-digit code.", fields: { code: "Enter the 6-digit code from your email" } });
 
   if (!isLive()) {
     await mockDelay(800);

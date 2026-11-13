@@ -12,7 +12,7 @@ import { parseSearch } from "@/lib/flights/search-params";
 import type { FlightOffer, SearchResponse } from "@/lib/flights/types";
 import { cn } from "@/lib/utils";
 import { AirlineStrip, type AirlineSummary } from "./AirlineStrip";
-import { FilterFacets, Filters, FiltersPanel, emptyFilters } from "./FiltersPanel";
+import { type FilterFacets, type Filters, FiltersPanel, emptyFilters } from "./FiltersPanel";
 import { FlightCard, FlightCardSkeleton } from "./FlightCard";
 import { FlightDetailsModal } from "./FlightDetailsModal";
 import { ItineraryBand, cityOf, routeTitle } from "./ItineraryBand";
@@ -106,12 +106,14 @@ export function FlightResults({ variant = "site" }: { variant?: "site" | "dashbo
   }, [query, search, attempt]);
 
   // Brief skeleton when filters or sorting change, like tbils.com re-rendering its list.
-  const touch = <T,>(fn: (v: T) => void) => (v: T) => {
-    fn(v);
-    setVisible(PAGE);
-    setRefreshing(true);
-    window.setTimeout(() => setRefreshing(false), 350);
-  };
+  const touch =
+    <T,>(fn: (v: T) => void) =>
+    (v: T) => {
+      fn(v);
+      setVisible(PAGE);
+      setRefreshing(true);
+      window.setTimeout(() => setRefreshing(false), 350);
+    };
   const changeFilters = touch(setFilters);
   const changeSort = touch(setSort);
 
@@ -135,8 +137,7 @@ export function FlightResults({ variant = "site" }: { variant?: "site" | "dashbo
 
   if (!search) return <InvalidSearch dash={dash} resultsPath={resultsPath} />;
 
-  const toggleAirline = (code: string) =>
-    changeFilters({ ...filters, airlines: filters.airlines.length === 1 && filters.airlines[0] === code ? [] : [code] });
+  const toggleAirline = (code: string) => changeFilters({ ...filters, airlines: filters.airlines.length === 1 && filters.airlines[0] === code ? [] : [code] });
 
   return (
     <div className={cn("bg-[#f4f6f9]", dash ? "" : "min-h-screen pb-12")}>
@@ -159,11 +160,7 @@ export function FlightResults({ variant = "site" }: { variant?: "site" | "dashbo
 
         <main className="min-w-0 flex-1 lg:pl-1">
           {state.status === "error" ? (
-            <EmptyState
-              title="We couldn't load flights"
-              message={state.message}
-              action={{ label: "Try again", onClick: () => setAttempt((n) => n + 1) }}
-            />
+            <EmptyState title="We couldn't load flights" message={state.message} action={{ label: "Try again", onClick: () => setAttempt((n) => n + 1) }} />
           ) : state.status === "loading" || !facets ? (
             <div className="space-y-4" aria-hidden>
               {Array.from({ length: 4 }, (_, i) => (
@@ -231,15 +228,17 @@ export function FlightResults({ variant = "site" }: { variant?: "site" | "dashbo
                     action={{ label: "Clear all filters", onClick: () => changeFilters(emptyFilters) }}
                   />
                 ) : (
-                  list.slice(0, visible).map((o, i) => (
-                    <FlightCard
-                      key={o.id}
-                      offer={o}
-                      tag={o.id === cheapestId ? "Cheapest" : o.id === fastestId ? "Fastest" : undefined}
-                      onViewDetails={() => setDetails(o)}
-                      style={{ animationDelay: `${Math.min(i % PAGE, 8) * 40}ms` }}
-                    />
-                  ))
+                  list
+                    .slice(0, visible)
+                    .map((o, i) => (
+                      <FlightCard
+                        key={o.id}
+                        offer={o}
+                        tag={o.id === cheapestId ? "Cheapest" : o.id === fastestId ? "Fastest" : undefined}
+                        onViewDetails={() => setDetails(o)}
+                        style={{ animationDelay: `${Math.min(i % PAGE, 8) * 40}ms` }}
+                      />
+                    ))
                 )}
               </div>
 
@@ -266,7 +265,12 @@ export function FlightResults({ variant = "site" }: { variant?: "site" | "dashbo
           <h2 id="filters-title" className="sr-only">
             Filters
           </h2>
-          <FiltersPanel facets={facets} filters={filters} onChange={changeFilters} className="max-h-[75vh] overflow-y-auto rounded-none border-0 pr-12 shadow-none" />
+          <FiltersPanel
+            facets={facets}
+            filters={filters}
+            onChange={changeFilters}
+            className="max-h-[75vh] overflow-y-auto rounded-none border-0 pr-12 shadow-none"
+          />
           <div className="border-t border-[#eef1f5] p-4">
             <button
               type="button"
@@ -313,5 +317,3 @@ function InvalidSearch({ dash, resultsPath }: { dash: boolean; resultsPath: stri
     </div>
   );
 }
-
-

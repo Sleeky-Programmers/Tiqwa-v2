@@ -264,7 +264,14 @@ export function CheckoutFlow({ variant = "site" }: { variant?: BookingVariant })
       const res = await fetch("/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "reserve", offerId: draft.offer.id, travellers, documentRequired: international, addonIds: draft.addonIds ?? [] }),
+        body: JSON.stringify({
+          action: "reserve",
+          offerId: draft.offer.id,
+          travellers,
+          documentRequired: international,
+          addonIds: draft.addonIds ?? [],
+          couponCode: draft.promo?.code,
+        }),
       });
       const json = await res.json();
       if (!res.ok) {
@@ -291,7 +298,13 @@ export function CheckoutFlow({ variant = "site" }: { variant?: BookingVariant })
 
   const pay = async (method: PayMethod, reference?: string) => {
     if (!draft) return;
-    setBusy(method === "paystack" ? "Verifying your payment, please wait..." : method === "hold" ? "Holding your seat, please wait..." : "Creating your booking, please wait...");
+    setBusy(
+      method === "paystack"
+        ? "Verifying your payment, please wait..."
+        : method === "hold"
+          ? "Holding your seat, please wait..."
+          : "Creating your booking, please wait...",
+    );
     try {
       const res = await fetch("/api/bookings", {
         method: "POST",
@@ -343,7 +356,15 @@ export function CheckoutFlow({ variant = "site" }: { variant?: BookingVariant })
         saveBooking({
           ...draft,
           reservation: { ...r, airlinePnr: airlinePnr && airlinePnr !== "Pending" ? airlinePnr : r.airlinePnr },
-          payment: { method: draft.payment?.method ?? choice.kind, methodLabel: draft.payment?.methodLabel ?? choice.label, status: "confirmed", transactionRef: draft.payment?.transactionRef ?? null, paidAt: draft.payment?.paidAt ?? null, amount, fee: 0 },
+          payment: {
+            method: draft.payment?.method ?? choice.kind,
+            methodLabel: draft.payment?.methodLabel ?? choice.label,
+            status: "confirmed",
+            transactionRef: draft.payment?.transactionRef ?? null,
+            paidAt: draft.payment?.paidAt ?? null,
+            amount,
+            fee: 0,
+          },
           bookedAt: draft.bookedAt ?? new Date().toISOString(),
         });
         router.push(`${routes.success}?payment_method=card`);
@@ -353,7 +374,7 @@ export function CheckoutFlow({ variant = "site" }: { variant?: BookingVariant })
         const final: BookingDraft = {
           ...draft,
           reservation: { ...r, expiresAt: json.expiresAt ?? r.expiresAt },
-          payment: { method: "hold", methodLabel: choice.label, status: "reserved", transactionRef: null, paidAt: null, amount, fee: 0 },
+          payment: { method: "hold", methodLabel: choice.label, status: "reserved", transactionRef: json.transactionRef ?? null, paidAt: null, amount, fee: 0 },
           bookedAt: new Date().toISOString(),
         };
         saveBooking(final);
@@ -363,13 +384,24 @@ export function CheckoutFlow({ variant = "site" }: { variant?: BookingVariant })
       // Remember where to come back to; the gateway returns to /verify-payment.
       saveBooking({
         ...draft,
-        payment: { method: choice.kind, methodLabel: choice.label, status: "processing", transactionRef: json.transactionRef ?? null, paidAt: null, amount, fee: 0 },
+        payment: {
+          method: choice.kind,
+          methodLabel: choice.label,
+          status: "processing",
+          transactionRef: json.transactionRef ?? null,
+          paidAt: null,
+          amount,
+          fee: 0,
+        },
       });
       sessionStorage.setItem("tbils.paymentReturn", JSON.stringify({ variant, reference: r.pnr }));
       window.location.assign(json.authorizationUrl);
     } catch (e) {
       setBusy(null);
-      setAlert({ title: "We couldn't start your payment", message: e instanceof Error && e.message ? e.message : "Please try again, or choose a different payment method." });
+      setAlert({
+        title: "We couldn't start your payment",
+        message: e instanceof Error && e.message ? e.message : "Please try again, or choose a different payment method.",
+      });
     }
   };
 
@@ -414,10 +446,16 @@ export function CheckoutFlow({ variant = "site" }: { variant?: BookingVariant })
           <div className={cn("grid items-start gap-4", dash ? "xl:grid-cols-[1fr_360px]" : "lg:grid-cols-[1fr_384px]")}>
             <main className="min-w-0 space-y-4">
               {draft.priceChanged && (
-                <div role="status" className="flex items-start gap-3 rounded-[14px] border border-[#fed7aa] bg-[#fff7ed] px-4 py-3.5 text-sm text-[#9a3412] animate-[acc-reveal_0.35s_ease]">
-                  <span aria-hidden className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-orange text-xs font-bold text-white">!</span>
+                <div
+                  role="status"
+                  className="flex items-start gap-3 rounded-[14px] border border-[#fed7aa] bg-[#fff7ed] px-4 py-3.5 text-sm text-[#9a3412] animate-[acc-reveal_0.35s_ease]"
+                >
+                  <span aria-hidden className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-orange text-xs font-bold text-white">
+                    !
+                  </span>
                   <p>
-                    <strong>The airline updated this fare.</strong> The new total is shown in your booking summary. Continue if you&apos;re happy with it, or go back to pick another flight.
+                    <strong>The airline updated this fare.</strong> The new total is shown in your booking summary. Continue if you&apos;re happy with it, or go
+                    back to pick another flight.
                   </p>
                 </div>
               )}
@@ -498,7 +536,11 @@ export function CheckoutFlow({ variant = "site" }: { variant?: BookingVariant })
                       Save &amp; continue to {labels[activeTraveller + 1]} <ArrowRight className="size-4" />
                     </button>
                   ) : (
-                    <button type="button" onClick={submitTravellers} className="press rounded-xl bg-blue px-10 py-[13px] text-base font-bold text-white hover:bg-blue-600">
+                    <button
+                      type="button"
+                      onClick={submitTravellers}
+                      className="press rounded-xl bg-blue px-10 py-[13px] text-base font-bold text-white hover:bg-blue-600"
+                    >
                       Next
                     </button>
                   )}
@@ -551,7 +593,11 @@ export function CheckoutFlow({ variant = "site" }: { variant?: BookingVariant })
                     </label>
                     {termsError && <p className="mt-1.5 text-xs font-medium text-error">Please accept the terms and conditions to continue</p>}
                     <div className="mt-5 flex justify-end">
-                      <button type="button" onClick={reserve} className="press rounded-xl bg-blue px-10 py-[13px] text-base font-bold text-white hover:bg-blue-600">
+                      <button
+                        type="button"
+                        onClick={reserve}
+                        className="press rounded-xl bg-blue px-10 py-[13px] text-base font-bold text-white hover:bg-blue-600"
+                      >
                         Continue to Payment
                       </button>
                     </div>
@@ -641,4 +687,3 @@ function MissingBooking({ dash, searchHref }: { dash: boolean; searchHref: strin
     </div>
   );
 }
-

@@ -24,7 +24,7 @@ function rng(seed: string) {
   };
 }
 type Rand = () => number;
-const pick = <T,>(r: Rand, arr: readonly T[]) => arr[Math.floor(r() * arr.length)];
+const pick = <T>(r: Rand, arr: readonly T[]) => arr[Math.floor(r() * arr.length)];
 const between = (r: Rand, min: number, max: number) => min + r() * (max - min);
 
 /* ---------- carriers ---------- */
@@ -46,33 +46,181 @@ type Carrier = {
 };
 
 const INTL: Carrier[] = [
-  { code: "QR", name: "Qatar Airways", hub: "DOH", factor: 0.9, slots: ["15:30", "23:40"], aircraft: ["Boeing 787-8", "Airbus A350-900"], baggage: "2 checkin allowance" },
+  {
+    code: "QR",
+    name: "Qatar Airways",
+    hub: "DOH",
+    factor: 0.9,
+    slots: ["15:30", "23:40"],
+    aircraft: ["Boeing 787-8", "Airbus A350-900"],
+    baggage: "2 checkin allowance",
+  },
   { code: "KQ", name: "Kenya Airways", hub: "NBO", factor: 0.92, slots: ["12:45"], aircraft: ["Boeing 787-8", "Embraer 190"], baggage: "2 checkin allowance" },
-  { code: "AT", name: "Royal Air Maroc", hub: "CMN", factor: 1.0, slots: ["19:05"], aircraft: ["Boeing 737-800", "Boeing 787-9"], baggage: "2 checkin allowance" },
-  { code: "WB", name: "Rwandair Express", hub: "KGL", factor: 1.02, slots: ["14:45"], aircraft: ["Airbus A330-200", "Boeing 737-800"], baggage: "2 checkin allowance" },
-  { code: "ET", name: "Ethiopian Airlines", hub: "ADD", factor: 1.04, slots: ["13:15", "09:50"], aircraft: ["Boeing 787-9", "Airbus A350-900"], baggage: "2 checkin allowance" },
+  {
+    code: "AT",
+    name: "Royal Air Maroc",
+    hub: "CMN",
+    factor: 1.0,
+    slots: ["19:05"],
+    aircraft: ["Boeing 737-800", "Boeing 787-9"],
+    baggage: "2 checkin allowance",
+  },
+  {
+    code: "WB",
+    name: "Rwandair Express",
+    hub: "KGL",
+    factor: 1.02,
+    slots: ["14:45"],
+    aircraft: ["Airbus A330-200", "Boeing 737-800"],
+    baggage: "2 checkin allowance",
+  },
+  {
+    code: "ET",
+    name: "Ethiopian Airlines",
+    hub: "ADD",
+    factor: 1.04,
+    slots: ["13:15", "09:50"],
+    aircraft: ["Boeing 787-9", "Airbus A350-900"],
+    baggage: "2 checkin allowance",
+  },
   { code: "MS", name: "Egyptair", hub: "CAI", factor: 1.12, slots: ["15:00"], aircraft: ["Boeing 737-800", "Airbus A330-300"], baggage: "2 checkin allowance" },
-  { code: "TK", name: "Turkish Airlines", hub: "IST", factor: 1.15, slots: ["22:10", "10:35"], aircraft: ["Airbus A330-300", "Boeing 787-9"], baggage: "2 checkin allowance" },
+  {
+    code: "TK",
+    name: "Turkish Airlines",
+    hub: "IST",
+    factor: 1.15,
+    slots: ["22:10", "10:35"],
+    aircraft: ["Airbus A330-300", "Boeing 787-9"],
+    baggage: "2 checkin allowance",
+  },
   { code: "EK", name: "Emirates", hub: "DXB", factor: 1.18, slots: ["16:45"], aircraft: ["Boeing 777-300ER"], baggage: "2 checkin allowance" },
   { code: "EY", name: "Etihad Airways", hub: "AUH", factor: 1.1, slots: ["21:25"], aircraft: ["Boeing 787-9"], baggage: "2 checkin allowance" },
-  { code: "LH", name: "Lufthansa", hub: "FRA", factor: 1.32, slots: ["23:55"], aircraft: ["Airbus A330-300", "Airbus A320neo"], baggage: "1 checkin allowance" },
-  { code: "LX", name: "Swiss International Air Lines", hub: "ZRH", feeder: "ACC", factor: 1.3, slots: ["23:55"], aircraft: ["Airbus A330-300", "Airbus A220-300"], baggage: "1 checkin allowance" },
-  { code: "SN", name: "Brussels Airlines", hub: "BRU", feeder: "ACC", factor: 1.33, slots: ["21:50"], aircraft: ["Airbus A330-300", "Airbus A320"], baggage: "1 checkin allowance" },
+  {
+    code: "LH",
+    name: "Lufthansa",
+    hub: "FRA",
+    factor: 1.32,
+    slots: ["23:55"],
+    aircraft: ["Airbus A330-300", "Airbus A320neo"],
+    baggage: "1 checkin allowance",
+  },
+  {
+    code: "LX",
+    name: "Swiss International Air Lines",
+    hub: "ZRH",
+    feeder: "ACC",
+    factor: 1.3,
+    slots: ["23:55"],
+    aircraft: ["Airbus A330-300", "Airbus A220-300"],
+    baggage: "1 checkin allowance",
+  },
+  {
+    code: "SN",
+    name: "Brussels Airlines",
+    hub: "BRU",
+    feeder: "ACC",
+    factor: 1.33,
+    slots: ["21:50"],
+    aircraft: ["Airbus A330-300", "Airbus A320"],
+    baggage: "1 checkin allowance",
+  },
   { code: "AF", name: "Air France", hub: "CDG", factor: 1.28, slots: ["23:15"], aircraft: ["Airbus A350-900", "Airbus A320"], baggage: "1 checkin allowance" },
-  { code: "KL", name: "KLM Royal Dutch Airlines", hub: "AMS", factor: 1.27, slots: ["22:45"], aircraft: ["Boeing 787-10", "Embraer 175"], baggage: "1 checkin allowance" },
-  { code: "BA", name: "British Airways", hub: "LHR", factor: 1.42, slots: ["23:15"], aircraft: ["Boeing 787-9", "Airbus A320"], baggage: "2 checkin allowance" },
+  {
+    code: "KL",
+    name: "KLM Royal Dutch Airlines",
+    hub: "AMS",
+    factor: 1.27,
+    slots: ["22:45"],
+    aircraft: ["Boeing 787-10", "Embraer 175"],
+    baggage: "1 checkin allowance",
+  },
+  {
+    code: "BA",
+    name: "British Airways",
+    hub: "LHR",
+    factor: 1.42,
+    slots: ["23:15"],
+    aircraft: ["Boeing 787-9", "Airbus A320"],
+    baggage: "2 checkin allowance",
+  },
   { code: "VS", name: "Virgin Atlantic", hub: "LHR", factor: 1.38, slots: ["22:55"], aircraft: ["Airbus A330-300"], baggage: "1 checkin allowance" },
-  { code: "DL", name: "Delta Air Lines", hub: "ATL", direct: ["JFK"], factor: 1.36, slots: ["22:30"], aircraft: ["Airbus A330-900neo", "Boeing 757-200"], baggage: "2 checkin allowance" },
-  { code: "UA", name: "United Airlines", hub: "IAD", factor: 1.34, slots: ["23:10"], aircraft: ["Boeing 787-8", "Boeing 737 MAX 9"], baggage: "2 checkin allowance" },
-  { code: "SA", name: "South African Airways", hub: "JNB", factor: 1.08, slots: ["14:20"], aircraft: ["Airbus A340-300", "Airbus A320"], baggage: "2 checkin allowance" },
-  { code: "AW", name: "Africa World Airlines", hub: "ACC", africaOnly: true, factor: 1.05, slots: ["07:40", "16:20"], aircraft: ["Embraer 145", "Boeing 737-800"], baggage: "1 checkin allowance" },
+  {
+    code: "DL",
+    name: "Delta Air Lines",
+    hub: "ATL",
+    direct: ["JFK"],
+    factor: 1.36,
+    slots: ["22:30"],
+    aircraft: ["Airbus A330-900neo", "Boeing 757-200"],
+    baggage: "2 checkin allowance",
+  },
+  {
+    code: "UA",
+    name: "United Airlines",
+    hub: "IAD",
+    factor: 1.34,
+    slots: ["23:10"],
+    aircraft: ["Boeing 787-8", "Boeing 737 MAX 9"],
+    baggage: "2 checkin allowance",
+  },
+  {
+    code: "SA",
+    name: "South African Airways",
+    hub: "JNB",
+    factor: 1.08,
+    slots: ["14:20"],
+    aircraft: ["Airbus A340-300", "Airbus A320"],
+    baggage: "2 checkin allowance",
+  },
+  {
+    code: "AW",
+    name: "Africa World Airlines",
+    hub: "ACC",
+    africaOnly: true,
+    factor: 1.05,
+    slots: ["07:40", "16:20"],
+    aircraft: ["Embraer 145", "Boeing 737-800"],
+    baggage: "1 checkin allowance",
+  },
 ];
 
 const DOMESTIC: Carrier[] = [
-  { code: "P4", name: "Air Peace", hub: "LOS", factor: 1.0, slots: ["07:00", "10:15", "13:30", "17:45"], aircraft: ["Boeing 737-500", "Embraer 195-E2"], baggage: "1 checkin allowance (23kg)" },
-  { code: "QI", name: "Ibom Air", hub: "QUO", factor: 1.08, slots: ["08:20", "15:10"], aircraft: ["Bombardier CRJ900", "Airbus A220-300"], baggage: "1 checkin allowance (23kg)" },
-  { code: "W3", name: "Arik Air", hub: "LOS", factor: 0.95, slots: ["09:40", "16:30"], aircraft: ["Boeing 737-700", "Bombardier Q400"], baggage: "1 checkin allowance (20kg)" },
-  { code: "VK", name: "ValueJet", hub: "LOS", factor: 0.9, slots: ["06:30", "12:00", "18:20"], aircraft: ["Bombardier CRJ900"], baggage: "1 checkin allowance (20kg)" },
+  {
+    code: "P4",
+    name: "Air Peace",
+    hub: "LOS",
+    factor: 1.0,
+    slots: ["07:00", "10:15", "13:30", "17:45"],
+    aircraft: ["Boeing 737-500", "Embraer 195-E2"],
+    baggage: "1 checkin allowance (23kg)",
+  },
+  {
+    code: "QI",
+    name: "Ibom Air",
+    hub: "QUO",
+    factor: 1.08,
+    slots: ["08:20", "15:10"],
+    aircraft: ["Bombardier CRJ900", "Airbus A220-300"],
+    baggage: "1 checkin allowance (23kg)",
+  },
+  {
+    code: "W3",
+    name: "Arik Air",
+    hub: "LOS",
+    factor: 0.95,
+    slots: ["09:40", "16:30"],
+    aircraft: ["Boeing 737-700", "Bombardier Q400"],
+    baggage: "1 checkin allowance (20kg)",
+  },
+  {
+    code: "VK",
+    name: "ValueJet",
+    hub: "LOS",
+    factor: 0.9,
+    slots: ["06:30", "12:00", "18:20"],
+    aircraft: ["Bombardier CRJ900"],
+    baggage: "1 checkin allowance (20kg)",
+  },
 ];
 
 const LAYOVERS = [85, 140, 205, 330, 455, 575, 760];
@@ -98,7 +246,22 @@ const ref = (code: string): AirportRef => {
 };
 
 const isNigeria = (code: string) => getAirport(code)?.country === "Nigeria";
-const AFRICA = new Set(["Nigeria", "Ghana", "Kenya", "South Africa", "Egypt", "Ethiopia", "Rwanda", "Morocco", "Senegal", "Côte d'Ivoire", "Togo", "Benin", "Angola", "Tanzania"]);
+const AFRICA = new Set([
+  "Nigeria",
+  "Ghana",
+  "Kenya",
+  "South Africa",
+  "Egypt",
+  "Ethiopia",
+  "Rwanda",
+  "Morocco",
+  "Senegal",
+  "Côte d'Ivoire",
+  "Togo",
+  "Benin",
+  "Angola",
+  "Tanzania",
+]);
 const inAfrica = (code: string) => AFRICA.has(getAirport(code)?.country ?? "");
 
 /* ---------- journey building ---------- */
@@ -193,7 +356,12 @@ function legOptions(leg: SearchLeg, cabin: Cabin, seed: string): Option[] {
   }
   if (out.length === 0) {
     // Far-flung pairs: fall back to the big Gulf / Istanbul connectors.
-    for (const code of ["QR", "EK", "TK"]) add(INTL.find((c) => c.code === code)!, [from, INTL.find((c) => c.code === code)!.hub, to], 2);
+    for (const code of ["QR", "EK", "TK"])
+      add(
+        INTL.find((c) => c.code === code)!,
+        [from, INTL.find((c) => c.code === code)!.hub, to],
+        2,
+      );
   }
   return out;
 }
@@ -259,7 +427,13 @@ export function searchFlights(search: FlightSearch): FlightOffer[] {
   } else {
     // Multi-city: combine the cheaper options of each leg.
     const sorted = perLeg.map((opts) => [...opts].sort((a, b) => a.base - b.base).slice(0, 8));
-    for (let i = 0; i < 24; i++) offers.push(make(sorted.map((opts) => opts[(i + Math.floor(r() * 3)) % opts.length]), 0.95));
+    for (let i = 0; i < 24; i++)
+      offers.push(
+        make(
+          sorted.map((opts) => opts[(i + Math.floor(r() * 3)) % opts.length]),
+          0.95,
+        ),
+      );
   }
 
   const unique = new Map(offers.map((o) => [o.id, o]));

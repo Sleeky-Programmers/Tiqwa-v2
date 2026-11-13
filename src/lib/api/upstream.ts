@@ -43,7 +43,17 @@ export function friendly(raw: unknown, fallback: string): string {
 }
 
 const codeFor = (status: number) =>
-  status === 401 ? "UNAUTHORIZED" : status === 403 ? "FORBIDDEN" : status === 404 ? "NOT_FOUND" : status === 422 ? "VALIDATION" : status === 429 ? "RATE_LIMITED" : "UPSTREAM_ERROR";
+  status === 401
+    ? "UNAUTHORIZED"
+    : status === 403
+      ? "FORBIDDEN"
+      : status === 404
+        ? "NOT_FOUND"
+        : status === 422
+          ? "VALIDATION"
+          : status === 429
+            ? "RATE_LIMITED"
+            : "UPSTREAM_ERROR";
 
 /** `{ field: ["msg"] }` → `{ field: "msg" }` */
 function firstErrors(errors: unknown): Record<string, string> | undefined {
@@ -61,12 +71,23 @@ export async function sessionToken() {
 }
 
 export async function upstream<T>(path: string, opts: Options = {}): Promise<Result<T>> {
-  const { method = "GET", query, body, auth = true, timeoutMs = 20_000, fallback = "We couldn't reach our booking service. Please try again in a moment." } = opts;
+  const {
+    method = "GET",
+    query,
+    body,
+    auth = true,
+    timeoutMs = 20_000,
+    fallback = "We couldn't reach our booking service. Please try again in a moment.",
+  } = opts;
   if (!API_URL) return { ok: false, error: { code: "NOT_CONFIGURED", message: fallback, status: 503 } };
   await connection();
 
   const qs = query
-    ? new URLSearchParams(Object.entries(query).filter(([, v]) => v !== undefined && v !== null).map(([k, v]) => [k, String(v)])).toString()
+    ? new URLSearchParams(
+        Object.entries(query)
+          .filter(([, v]) => v !== undefined && v !== null)
+          .map(([k, v]) => [k, String(v)]),
+      ).toString()
     : "";
   const headers: Record<string, string> = {
     Accept: "application/json",
@@ -74,7 +95,9 @@ export async function upstream<T>(path: string, opts: Options = {}): Promise<Res
     Origin: process.env.APP_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:4545",
     "User-Agent": "Mozilla/5.0 (compatible; TbilsWeb/1.0)",
   };
-  if (body !== undefined) headers["Content-Type"] = "application/json";
+  // FormData (file uploads) sets its own multipart boundary header.
+  const isForm = typeof FormData !== "undefined" && body instanceof FormData;
+  if (body !== undefined && !isForm) headers["Content-Type"] = "application/json";
   const token = auth ? await sessionToken() : undefined;
   if (token) headers.Authorization = `Bearer ${token}`;
 
@@ -83,7 +106,7 @@ export async function upstream<T>(path: string, opts: Options = {}): Promise<Res
     res = await fetch(`${API_URL}${path}${qs ? `?${qs}` : ""}`, {
       method,
       headers,
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body: body === undefined ? undefined : isForm ? (body as FormData) : JSON.stringify(body),
       cache: "no-store",
       signal: AbortSignal.timeout(timeoutMs),
     });
@@ -109,7 +132,7 @@ export async function upstream<T>(path: string, opts: Options = {}): Promise<Res
 export const fail = (e: Pick<ApiError, "code" | "message" | "status"> & { fields?: Record<string, string> }) =>
   Response.json({ error: { code: e.code, message: e.message, ...(e.fields ? { fields: e.fields } : {}) } }, { status: e.status });
 
-export const ok = <T,>(data: T, init?: ResponseInit) => Response.json(data, init);
+export const ok = <T>(data: T, init?: ResponseInit) => Response.json(data, init);
 
 /** Simulated latency for mock responses, so loaders are visible in demo mode. */
 export const mockDelay = (ms: number) => new Promise((r) => setTimeout(r, ms));

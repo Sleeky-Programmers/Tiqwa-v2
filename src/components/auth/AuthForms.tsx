@@ -124,15 +124,33 @@ export function SignupForm() {
             ] as const
           ).map(([k, label, ac]) => (
             <Field key={k} label={label} htmlFor={`${id}-${k}`} error={errors[k]}>
-              <input id={`${id}-${k}`} autoComplete={ac} value={v[k]} onChange={(e) => set({ [k]: e.target.value })} className={cn(inputCls, errors[k] && "border-error")} />
+              <input
+                id={`${id}-${k}`}
+                autoComplete={ac}
+                value={v[k]}
+                onChange={(e) => set({ [k]: e.target.value })}
+                className={cn(inputCls, errors[k] && "border-error")}
+              />
             </Field>
           ))}
         </div>
         <Field label="Email address" htmlFor={`${id}-email`} error={errors.email}>
-          <input id={`${id}-email`} type="email" autoComplete="email" value={v.email} onChange={(e) => set({ email: e.target.value })} className={cn(inputCls, errors.email && "border-error")} />
+          <input
+            id={`${id}-email`}
+            type="email"
+            autoComplete="email"
+            value={v.email}
+            onChange={(e) => set({ email: e.target.value })}
+            className={cn(inputCls, errors.email && "border-error")}
+          />
         </Field>
         <Field label="Phone number (optional)" htmlFor={`${id}-phone`} error={errors.phone}>
-          <div className={cn("flex h-[45px] overflow-hidden rounded-[10px] border border-[#e4e8ee] bg-white focus-within:border-blue focus-within:ring-2 focus-within:ring-blue/20", errors.phone && "border-error")}>
+          <div
+            className={cn(
+              "flex h-[45px] overflow-hidden rounded-[10px] border border-[#e4e8ee] bg-white focus-within:border-blue focus-within:ring-2 focus-within:ring-blue/20",
+              errors.phone && "border-error",
+            )}
+          >
             <span className="flex items-center bg-[#f5f5f5] px-3 text-[15px] font-medium text-ink-900">+234</span>
             <input
               id={`${id}-phone`}
@@ -194,6 +212,22 @@ export function VerifyEmailForm() {
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [resend, setResend] = useState<{ wait: number; sending: boolean; note: string }>({ wait: 0, sending: false, note: "" });
+
+  useEffect(() => {
+    if (!resend.wait) return;
+    const t = window.setTimeout(() => setResend((r) => ({ ...r, wait: r.wait - 1 })), 1000);
+    return () => window.clearTimeout(t);
+  }, [resend.wait]);
+
+  const resendCode = async () => {
+    setResend({ wait: 0, sending: true, note: "" });
+    const { errors } = await postJson("/api/auth/resend-verification", { email });
+    if (Object.keys(errors).length) return setResend({ wait: 0, sending: false, note: errors.email ?? errors.form ?? "We couldn't send a new code." });
+    setCode("");
+    setError("");
+    setResend({ wait: 60, sending: false, note: "A new code is on its way." });
+  };
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -237,11 +271,21 @@ export function VerifyEmailForm() {
       </form>
       <p className="mt-6 text-center text-sm text-ink-500">
         Didn&apos;t get it? Check your spam folder, or{" "}
-        <Link href="/login" className={textLink}>
-          sign in
-        </Link>{" "}
-        to continue.
+        <button
+          type="button"
+          onClick={resendCode}
+          disabled={!email || resend.sending || resend.wait > 0}
+          className={cn(textLink, "disabled:cursor-not-allowed disabled:opacity-50")}
+        >
+          {resend.sending ? "sending a new code…" : resend.wait > 0 ? `send a new code in ${resend.wait}s` : "send a new code"}
+        </button>
+        .
       </p>
+      {resend.note && (
+        <p role="status" className="mt-2 text-center text-sm font-medium text-ink-500">
+          {resend.note}
+        </p>
+      )}
     </>
   );
 }
@@ -334,12 +378,33 @@ export function ResetPasswordForm() {
 
   return (
     <>
-      <AuthHeading title="Set a new password" sub={<>Enter the code we emailed{v.email ? <> to <strong className="text-ink-900">{v.email}</strong></> : null} and choose a new password.</>} />
+      <AuthHeading
+        title="Set a new password"
+        sub={
+          <>
+            Enter the code we emailed
+            {v.email ? (
+              <>
+                {" "}
+                to <strong className="text-ink-900">{v.email}</strong>
+              </>
+            ) : null}{" "}
+            and choose a new password.
+          </>
+        }
+      />
       {errors.form && <Notice tone="error">{errors.form}</Notice>}
       <form onSubmit={onSubmit} noValidate className="space-y-4">
         {!params.get("email") && (
           <Field label="Email address" htmlFor={`${id}-email`} error={errors.email}>
-            <input id={`${id}-email`} type="email" autoComplete="email" value={v.email} onChange={(e) => set({ email: e.target.value })} className={cn(inputCls, errors.email && "border-error")} />
+            <input
+              id={`${id}-email`}
+              type="email"
+              autoComplete="email"
+              value={v.email}
+              onChange={(e) => set({ email: e.target.value })}
+              className={cn(inputCls, errors.email && "border-error")}
+            />
           </Field>
         )}
         <Field label="Reset code" error={errors.code}>

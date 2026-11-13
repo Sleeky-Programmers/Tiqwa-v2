@@ -15,7 +15,7 @@ export async function GET() {
     fallback: "We couldn't load your bookings right now. Please try again.",
   });
   if (!res.ok) return fail(res.error);
-  const rows = Array.isArray(res.data) ? res.data : res.data?.itemList ?? [];
+  const rows = Array.isArray(res.data) ? res.data : (res.data?.itemList ?? []);
   const bookings = rows.map((r) => mapBooking(r)).filter((b): b is HistoryBooking => !!b);
   bookings.sort((a, b) => (b.bookedAt ?? "").localeCompare(a.bookedAt ?? ""));
   return Response.json({ live: true, bookings });

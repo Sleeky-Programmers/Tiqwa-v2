@@ -80,7 +80,9 @@ export function ContactForm() {
           <CircleCheck className="size-8" />
         </span>
         <h2 className="font-display text-2xl font-extrabold text-ink-900">Message sent</h2>
-        <p className="mx-auto mt-2 max-w-sm text-sm text-ink-500">Thanks, {name.split(" ")[0] || "there"}. Our team will reply to {email} shortly, usually within a few hours.</p>
+        <p className="mx-auto mt-2 max-w-sm text-sm text-ink-500">
+          Thanks, {name.split(" ")[0] || "there"}. Our team will reply to {email} shortly, usually within a few hours.
+        </p>
         <button
           type="button"
           onClick={() => {
@@ -102,16 +104,36 @@ export function ContactForm() {
       {errors.form && <p className="mt-4 rounded-xl border border-[#fecaca] bg-[#fef2f2] px-4 py-3 text-sm text-[#b91c1c]">{errors.form}</p>}
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
         <Field label="Full name" htmlFor={`${id}-name`} error={errors.name}>
-          <input id={`${id}-name`} autoComplete="name" value={name} onChange={(e) => set({ name: e.target.value })} className={cn(inputCls, errors.name && "border-error")} />
+          <input
+            id={`${id}-name`}
+            autoComplete="name"
+            value={name}
+            onChange={(e) => set({ name: e.target.value })}
+            className={cn(inputCls, errors.name && "border-error")}
+          />
         </Field>
         <Field label="Email address" htmlFor={`${id}-email`} error={errors.email}>
-          <input id={`${id}-email`} type="email" autoComplete="email" value={email} onChange={(e) => set({ email: e.target.value })} className={cn(inputCls, errors.email && "border-error")} />
+          <input
+            id={`${id}-email`}
+            type="email"
+            autoComplete="email"
+            value={email}
+            onChange={(e) => set({ email: e.target.value })}
+            className={cn(inputCls, errors.email && "border-error")}
+          />
         </Field>
         <Field label="Phone (optional)" htmlFor={`${id}-phone`}>
           <input id={`${id}-phone`} type="tel" autoComplete="tel" value={v.phone} onChange={(e) => set({ phone: e.target.value })} className={inputCls} />
         </Field>
         <Field label="Subject" error={errors.subject}>
-          <Select label="Subject" value={v.subject} placeholder="Choose a topic" options={preset && !SUBJECTS.includes(preset) ? [preset, ...SUBJECTS] : SUBJECTS} onChange={(x) => set({ subject: x })} triggerClassName="h-[45px]" />
+          <Select
+            label="Subject"
+            value={v.subject}
+            placeholder="Choose a topic"
+            options={preset && !SUBJECTS.includes(preset) ? [preset, ...SUBJECTS] : SUBJECTS}
+            onChange={(x) => set({ subject: x })}
+            triggerClassName="h-[45px]"
+          />
         </Field>
         <div className="sm:col-span-2">
           <Field label="Message" htmlFor={`${id}-msg`} error={errors.message}>

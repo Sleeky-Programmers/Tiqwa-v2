@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LogOut, MessageCircle, Phone } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
-import { contact } from "@/data/contact";
+import { useContact } from "@/components/layout/ContactProvider";
 import { signOut } from "@/lib/account";
 import { cn } from "@/lib/utils";
 import { dashboardNav } from "./nav";
@@ -15,6 +15,7 @@ export function isActive(path: string, href: string, exact?: boolean) {
 
 /** Left navigation: logo, main links, help card and sign out. */
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
+  const contact = useContact();
   const path = usePathname();
   return (
     <div className="flex h-full flex-col bg-white">
@@ -54,14 +55,16 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
           <p className="relative font-display text-base font-extrabold">Need help?</p>
           <p className="relative mt-1 text-xs text-white/80">Our travel experts are available 24/7.</p>
           <div className="relative mt-3 flex gap-2">
-            <a
-              href={contact.whatsapp.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="press flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-white py-2 text-xs font-bold text-[#014e78] hover:bg-sky-50"
-            >
-              <MessageCircle className="size-3.5" /> Chat
-            </a>
+            {contact.whatsapp && (
+              <a
+                href={contact.whatsapp.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="press flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-white py-2 text-xs font-bold text-[#014e78] hover:bg-sky-50"
+              >
+                <MessageCircle className="size-3.5" /> Chat
+              </a>
+            )}
             <a
               href={contact.phone.href}
               className="press flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-white/30 py-2 text-xs font-bold text-white hover:bg-white/10"

@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
   if (!callback.ok) console.warn("[payments/verify] callback", callback.error.status, callback.error.message);
   const confirmed = callback.ok && Number(callback.data?.status) === 200;
   const bookingId = confirmed ? String(callback.data?.booking_id ?? "") : "";
-  const flightId = confirmed ? callback.data?.flight_id ?? "" : "";
+  const flightId = confirmed ? (callback.data?.flight_id ?? "") : "";
 
   try {
     if (!bookingId || !flightId) {
@@ -51,7 +51,8 @@ export async function GET(request: NextRequest) {
     const booking = await issueOnce(bookingId, flightId, bookingRef);
     return Response.json({ paid: true, booking: booking ? mapBooking(booking) : null });
   } catch (e) {
-    if (e instanceof LockBusyError) return fail({ code: "IN_PROGRESS", status: 409, message: "We're still confirming this payment. Please wait a moment and check again." });
+    if (e instanceof LockBusyError)
+      return fail({ code: "IN_PROGRESS", status: 409, message: "We're still confirming this payment. Please wait a moment and check again." });
     throw e;
   }
 }

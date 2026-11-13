@@ -2,15 +2,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 /** TBiLS wordmark with the orange paper-plane mark (ported from tbils.com). */
-export function Logo({
-  className,
-  tone = "light",
-  width = 138,
-}: {
-  className?: string;
-  tone?: "light" | "dark";
-  width?: number;
-}) {
+export function Logo({ className, tone = "light", width = 138 }: { className?: string; tone?: "light" | "dark"; width?: number }) {
   return (
     <Link href="/" aria-label="TBiLS home" className={cn("inline-flex shrink-0", className)}>
       <svg width={width} height={(width * 56) / 184} viewBox="0 0 184 56" fill="none" role="img" aria-hidden>

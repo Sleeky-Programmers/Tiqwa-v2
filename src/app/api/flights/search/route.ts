@@ -36,7 +36,7 @@ async function liveSearch(search: FlightSearch) {
       children,
       infants,
       cabin: search.cabin,
-      return_date: search.trip === "round" ? back?.date ?? "" : "",
+      return_date: search.trip === "round" ? (back?.date ?? "") : "",
     },
     timeoutMs: SEARCH_TIMEOUT,
     fallback: FALLBACK,
@@ -65,12 +65,15 @@ export async function GET(request: NextRequest) {
   const problem = searchError(res.data?.itemList);
   if (problem) {
     // The supplier answers "no flights" as a validation message; show it as an empty result.
-    if (/no (flight|result)|not found|unavailable/i.test(problem)) return Response.json({ search, offers: [], currency: "NGN", live: true } satisfies SearchResponse);
+    if (/no (flight|result)|not found|unavailable/i.test(problem))
+      return Response.json({ search, offers: [], currency: "NGN", live: true } satisfies SearchResponse);
     return fail({ code: "INVALID_SEARCH", status: 422, message: problem });
   }
   const items = res.data.itemList as (WlFlightItem | WlMultiCityItem)[];
   const offers = items
-    .map((item) => (search.trip === "multi" ? mapMultiCityItem(item as WlMultiCityItem, search.cabin) : mapFlightItem(item as WlFlightItem, search.cabin, search.pax)))
+    .map((item) =>
+      search.trip === "multi" ? mapMultiCityItem(item as WlMultiCityItem, search.cabin) : mapFlightItem(item as WlFlightItem, search.cabin, search.pax),
+    )
     .filter((o): o is FlightOffer => !!o);
   const body: SearchResponse = { search, offers, currency: (items[0] as WlFlightItem | undefined)?.currency ?? "NGN", live: true };
   return Response.json(body);

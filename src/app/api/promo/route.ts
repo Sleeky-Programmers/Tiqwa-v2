@@ -6,7 +6,9 @@ const invalid = () => fail({ code: "INVALID_PROMO", status: 422, message: "This 
 /** POST { code, amount } → { code, discount, label }. Live: /rewards/coupon/validate (service FLIGHT). */
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
-  const code = String(body?.code ?? "").trim().toUpperCase();
+  const code = String(body?.code ?? "")
+    .trim()
+    .toUpperCase();
   const amount = Number(body?.amount) || 0;
   if (!code) return fail({ code: "VALIDATION", status: 422, message: "Enter a promo code." });
 

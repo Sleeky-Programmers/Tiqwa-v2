@@ -84,7 +84,11 @@ export function FlightSearchPage() {
             {popular.map(([from, to]) => (
               <Link
                 key={from + to}
-                href={inTwoWeeks ? `/dashboard/flights/results?trip=oneway&from=${from}&to=${to}&depart=${inTwoWeeks}&adults=1&children=0&infants=0&cabin=economy` : "#"}
+                href={
+                  inTwoWeeks
+                    ? `/dashboard/flights/results?trip=oneway&from=${from}&to=${to}&depart=${inTwoWeeks}&adults=1&children=0&infants=0&cabin=economy`
+                    : "#"
+                }
                 className="inline-flex items-center gap-1.5 rounded-full border border-[#dce7f1] bg-white px-3.5 py-2 text-sm font-semibold text-[#264361] transition hover:border-blue hover:text-blue"
               >
                 <MapPin className="size-3.5" />

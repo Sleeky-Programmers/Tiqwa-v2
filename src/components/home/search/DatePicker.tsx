@@ -19,8 +19,7 @@ const addDays = (iso: string, n: number) => {
 const monthKey = (d: Date) => d.getFullYear() * 12 + d.getMonth();
 
 /** "Fri, October 23" — the format tbils.com shows in the field. */
-export const formatDisplayDate = (iso: string) =>
-  fromIso(iso).toLocaleDateString("en-US", { weekday: "short", month: "long", day: "numeric" });
+export const formatDisplayDate = (iso: string) => fromIso(iso).toLocaleDateString("en-US", { weekday: "short", month: "long", day: "numeric" });
 
 const MONTHS_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 /** "12 / Mar / 1990" — the checkout date format. */
@@ -204,139 +203,156 @@ export function DatePicker({
           className="rounded-[4.8px] border-[0.83px] border-[#aeaeae] bg-white text-[12.8px] text-black shadow-[0_18px_45px_rgba(15,23,42,0.14)]"
         >
           {(placement) => (
-          <>
-          {/* Arrow pointing at the field, on whichever edge faces it */}
-          <span
-            aria-hidden
-            className={cn(
-              "absolute left-[50px] z-[1] size-[14px] border-[#aeaeae]",
-              placement === "bottom" ? "-top-[8px] rotate-45 border-l-[0.83px] border-t-[0.83px] bg-[#f0f0f0]" : "-bottom-[8px] rotate-[225deg] border-l-[0.83px] border-t-[0.83px] bg-white",
-            )}
-          />
+            <>
+              {/* Arrow pointing at the field, on whichever edge faces it */}
+              <span
+                aria-hidden
+                className={cn(
+                  "absolute left-[50px] z-[1] size-[14px] border-[#aeaeae]",
+                  placement === "bottom"
+                    ? "-top-[8px] rotate-45 border-l-[0.83px] border-t-[0.83px] bg-[#f0f0f0]"
+                    : "-bottom-[8px] rotate-[225deg] border-l-[0.83px] border-t-[0.83px] bg-white",
+                )}
+              />
 
-          <div className="relative rounded-t-[4.8px] border-b-[0.83px] border-[#aeaeae] bg-[#f0f0f0] pt-2">
-            {canPrev && (
-              <button type="button" aria-label="Previous month" onClick={() => shiftMonth(-1)} className="group absolute left-0.5 top-0.5 flex size-8 items-center justify-center">
-                <span className="size-[9px] rotate-[-135deg] border-r-[2.5px] border-t-[2.5px] border-[#ccc] group-hover:border-[#a6a6a6]" />
-              </button>
-            )}
-            {canNext && (
-              <button type="button" aria-label="Next month" onClick={() => shiftMonth(1)} className="group absolute right-0.5 top-0.5 flex size-8 items-center justify-center">
-                <span className="size-[9px] rotate-45 border-r-[2.5px] border-t-[2.5px] border-[#ccc] group-hover:border-[#a6a6a6]" />
-              </button>
-            )}
-            <h2 aria-live="polite" className="text-center text-[15.1px] font-bold leading-[18px]">
-              {jump ? (
-                <button
-                  type="button"
-                  onClick={() => setMode((m) => (m === "days" ? "years" : "days"))}
-                  className="inline-flex items-center gap-1 rounded px-1.5 hover:bg-black/5"
-                  aria-label={mode === "days" ? `${monthLabel}, choose year and month` : "Back to days"}
-                >
-                  {mode === "months" ? view.getFullYear() : monthLabel}
-                  <span aria-hidden className={cn("text-[10px] transition-transform", mode !== "days" && "rotate-180")}>▼</span>
-                </button>
-              ) : (
-                monthLabel
-              )}
-            </h2>
-            {mode === "days" && (
-              <div className="mt-2 grid grid-cols-7 justify-items-center px-[6.4px] pb-0.5" aria-hidden>
-                {WEEKDAYS.map((d) => (
-                  <span key={d} className="m-[2.656px] w-[27px] text-center leading-[27px] text-black">
-                    {d}
-                  </span>
-                ))}
-              </div>
-            )}
-            {mode !== "days" && <div className="h-2" />}
-          </div>
-
-          {mode === "years" && (
-            <div className="grid max-h-[216px] grid-cols-4 gap-1 overflow-y-auto p-2" role="listbox" aria-label="Choose year">
-              {Array.from({ length: maxYear - minYear + 1 }, (_, i) => maxYear - i).map((y) => (
-                <button
-                  key={y}
-                  type="button"
-                  role="option"
-                  aria-selected={y === view.getFullYear()}
-                  ref={(el) => {
-                    if (el && y === view.getFullYear()) el.scrollIntoView({ block: "center" });
-                  }}
-                  onClick={() => {
-                    setView(new Date(y, view.getMonth(), 1));
-                    setMode("months");
-                  }}
-                  className={cn("rounded-[4.8px] py-1.5", y === view.getFullYear() ? "bg-[#216ba5] font-bold text-white" : "hover:bg-[#f0f0f0]")}
-                >
-                  {y}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {mode === "months" && (
-            <div className="grid grid-cols-3 gap-1 p-2" role="listbox" aria-label="Choose month">
-              {MONTHS_SHORT.map((m, i) => {
-                const first = toIso(new Date(view.getFullYear(), i, 1));
-                const last = toIso(new Date(view.getFullYear(), i + 1, 0));
-                const off = (max && first > max) || (min && last < min);
-                return (
+              <div className="relative rounded-t-[4.8px] border-b-[0.83px] border-[#aeaeae] bg-[#f0f0f0] pt-2">
+                {canPrev && (
                   <button
-                    key={m}
                     type="button"
-                    role="option"
-                    aria-selected={i === view.getMonth()}
-                    disabled={!!off}
-                    onClick={() => pickYearMonth(view.getFullYear(), i)}
-                    className={cn("rounded-[4.8px] py-2", off ? "text-[#ccc]" : i === view.getMonth() ? "bg-[#216ba5] font-bold text-white" : "hover:bg-[#f0f0f0]")}
+                    aria-label="Previous month"
+                    onClick={() => shiftMonth(-1)}
+                    className="group absolute left-0.5 top-0.5 flex size-8 items-center justify-center"
                   >
-                    {m}
+                    <span className="size-[9px] rotate-[-135deg] border-r-[2.5px] border-t-[2.5px] border-[#ccc] group-hover:border-[#a6a6a6]" />
                   </button>
-                );
-              })}
-            </div>
-          )}
+                )}
+                {canNext && (
+                  <button
+                    type="button"
+                    aria-label="Next month"
+                    onClick={() => shiftMonth(1)}
+                    className="group absolute right-0.5 top-0.5 flex size-8 items-center justify-center"
+                  >
+                    <span className="size-[9px] rotate-45 border-r-[2.5px] border-t-[2.5px] border-[#ccc] group-hover:border-[#a6a6a6]" />
+                  </button>
+                )}
+                <h2 aria-live="polite" className="text-center text-[15.1px] font-bold leading-[18px]">
+                  {jump ? (
+                    <button
+                      type="button"
+                      onClick={() => setMode((m) => (m === "days" ? "years" : "days"))}
+                      className="inline-flex items-center gap-1 rounded px-1.5 hover:bg-black/5"
+                      aria-label={mode === "days" ? `${monthLabel}, choose year and month` : "Back to days"}
+                    >
+                      {mode === "months" ? view.getFullYear() : monthLabel}
+                      <span aria-hidden className={cn("text-[10px] transition-transform", mode !== "days" && "rotate-180")}>
+                        ▼
+                      </span>
+                    </button>
+                  ) : (
+                    monthLabel
+                  )}
+                </h2>
+                {mode === "days" && (
+                  <div className="mt-2 grid grid-cols-7 justify-items-center px-[6.4px] pb-0.5" aria-hidden>
+                    {WEEKDAYS.map((d) => (
+                      <span key={d} className="m-[2.656px] w-[27px] text-center leading-[27px] text-black">
+                        {d}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {mode !== "days" && <div className="h-2" />}
+              </div>
 
-          {mode === "days" && (
-            <div ref={gridRef} role="grid" aria-label={monthLabel} onKeyDown={onGridKey} className="m-[6.4px] text-center">
-              {monthGrid(view).map((week) => (
-                <div key={week[0]} role="row" className="grid grid-cols-7 justify-items-center">
-                  {week.map((iso) => {
-                    const d = fromIso(iso);
-                    const outside = d.getMonth() !== view.getMonth();
-                    const disabled = isDisabled(iso) || outside;
-                    const selected = iso === value;
+              {mode === "years" && (
+                <div className="grid max-h-[216px] grid-cols-4 gap-1 overflow-y-auto p-2" role="listbox" aria-label="Choose year">
+                  {Array.from({ length: maxYear - minYear + 1 }, (_, i) => maxYear - i).map((y) => (
+                    <button
+                      key={y}
+                      type="button"
+                      role="option"
+                      aria-selected={y === view.getFullYear()}
+                      ref={(el) => {
+                        if (el && y === view.getFullYear()) el.scrollIntoView({ block: "center" });
+                      }}
+                      onClick={() => {
+                        setView(new Date(y, view.getMonth(), 1));
+                        setMode("months");
+                      }}
+                      className={cn("rounded-[4.8px] py-1.5", y === view.getFullYear() ? "bg-[#216ba5] font-bold text-white" : "hover:bg-[#f0f0f0]")}
+                    >
+                      {y}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {mode === "months" && (
+                <div className="grid grid-cols-3 gap-1 p-2" role="listbox" aria-label="Choose month">
+                  {MONTHS_SHORT.map((m, i) => {
+                    const first = toIso(new Date(view.getFullYear(), i, 1));
+                    const last = toIso(new Date(view.getFullYear(), i + 1, 0));
+                    const off = (max && first > max) || (min && last < min);
                     return (
                       <button
-                        key={iso}
+                        key={m}
                         type="button"
-                        role="gridcell"
-                        data-date={iso}
-                        tabIndex={iso === focused ? 0 : -1}
-                        aria-selected={selected}
-                        aria-disabled={disabled}
-                        aria-label={d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
-                        onClick={() => !disabled && select(iso)}
-                        onFocus={() => setFocused(iso)}
+                        role="option"
+                        aria-selected={i === view.getMonth()}
+                        disabled={!!off}
+                        onClick={() => pickYearMonth(view.getFullYear(), i)}
                         className={cn(
-                          "m-[2.656px] size-[27px] rounded-[4.8px] leading-[27px] outline-none",
-                          disabled ? "cursor-default text-[#ccc]" : "cursor-pointer hover:bg-[#f0f0f0]",
-                          iso === today && !selected && "font-bold",
-                          selected && "bg-[#216ba5] font-bold text-white hover:bg-[#1d5d90]",
-                          iso === focused && !selected && !disabled && "bg-[#f0f0f0]",
-                          "focus-visible:ring-2 focus-visible:ring-blue/50",
+                          "rounded-[4.8px] py-2",
+                          off ? "text-[#ccc]" : i === view.getMonth() ? "bg-[#216ba5] font-bold text-white" : "hover:bg-[#f0f0f0]",
                         )}
                       >
-                        {d.getDate()}
+                        {m}
                       </button>
                     );
                   })}
                 </div>
-              ))}
-            </div>
-          )}
-          </>
+              )}
+
+              {mode === "days" && (
+                <div ref={gridRef} role="grid" aria-label={monthLabel} onKeyDown={onGridKey} className="m-[6.4px] text-center">
+                  {monthGrid(view).map((week) => (
+                    <div key={week[0]} role="row" className="grid grid-cols-7 justify-items-center">
+                      {week.map((iso) => {
+                        const d = fromIso(iso);
+                        const outside = d.getMonth() !== view.getMonth();
+                        const disabled = isDisabled(iso) || outside;
+                        const selected = iso === value;
+                        return (
+                          <button
+                            key={iso}
+                            type="button"
+                            role="gridcell"
+                            data-date={iso}
+                            tabIndex={iso === focused ? 0 : -1}
+                            aria-selected={selected}
+                            aria-disabled={disabled}
+                            aria-label={d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
+                            onClick={() => !disabled && select(iso)}
+                            onFocus={() => setFocused(iso)}
+                            className={cn(
+                              "m-[2.656px] size-[27px] rounded-[4.8px] leading-[27px] outline-none",
+                              disabled ? "cursor-default text-[#ccc]" : "cursor-pointer hover:bg-[#f0f0f0]",
+                              iso === today && !selected && "font-bold",
+                              selected && "bg-[#216ba5] font-bold text-white hover:bg-[#1d5d90]",
+                              iso === focused && !selected && !disabled && "bg-[#f0f0f0]",
+                              "focus-visible:ring-2 focus-visible:ring-blue/50",
+                            )}
+                          >
+                            {d.getDate()}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </Floating>
       )}

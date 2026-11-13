@@ -99,7 +99,9 @@ export function BookingsPage() {
     if (status !== "all" && b.status !== status) return false;
     if (!term) return true;
     const j = b.offer.journeys[0];
-    return [b.reservation.pnr, b.reservation.orderNo, j.from.city, j.to.city, j.from.code, j.to.code, b.offer.airline.name].some((v) => v.toLowerCase().includes(term));
+    return [b.reservation.pnr, b.reservation.orderNo, j.from.city, j.to.city, j.from.code, j.to.code, b.offer.airline.name].some((v) =>
+      v.toLowerCase().includes(term),
+    );
   });
 
   const switchTab = (t: Tab) => {
@@ -130,7 +132,9 @@ export function BookingsPage() {
             >
               <Icon className="size-4" />
               {label}
-              <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-bold", tab === id ? "bg-[rgba(2,144,222,0.1)] text-blue" : "bg-white text-ink-500")}>
+              <span
+                className={cn("rounded-full px-2 py-0.5 text-[11px] font-bold", tab === id ? "bg-[rgba(2,144,222,0.1)] text-blue" : "bg-white text-ink-500")}
+              >
                 {bookings ? groups[id].length : "–"}
               </span>
             </button>
@@ -159,7 +163,10 @@ export function BookingsPage() {
       </div>
 
       {error && (
-        <div role="alert" className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#fecaca] bg-[#fef2f2] px-5 py-4 text-sm text-[#b91c1c] animate-[acc-reveal_0.3s_ease]">
+        <div
+          role="alert"
+          className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#fecaca] bg-[#fef2f2] px-5 py-4 text-sm text-[#b91c1c] animate-[acc-reveal_0.3s_ease]"
+        >
           <span>{error}</span>
           <button type="button" onClick={refresh} className="press rounded-lg border border-[#fca5a5] bg-white px-3 py-1.5 font-bold">
             Try again

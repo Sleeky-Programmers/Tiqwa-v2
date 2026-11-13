@@ -54,7 +54,11 @@ export function LivePayment({ draft, onPay }: { draft: BookingDraft; onPay: (cho
 
   const submit = () => {
     if (!method) return;
-    const label = hold ? "Book on hold" : flexi ? `Pay small small (${parts} instalments) via ${gatewayName}` : `${method.title}${gatewayName ? ` via ${gatewayName}` : ""}`;
+    const label = hold
+      ? "Book on hold"
+      : flexi
+        ? `Pay small small (${parts} instalments) via ${gatewayName}`
+        : `${method.title}${gatewayName ? ` via ${gatewayName}` : ""}`;
     onPay({ method: method.id, kind: KIND[method.id] ?? "card", label, ...(needsGateway ? { gateway } : {}), ...(flexi ? { instalment: parts } : {}) });
   };
 
@@ -82,7 +86,14 @@ export function LivePayment({ draft, onPay }: { draft: BookingDraft; onPay: (cho
         <div className="animate-[acc-reveal_0.3s_ease]">
           <div role="radiogroup" aria-label="Payment method" className="grid gap-2.5">
             {opts.methods.map((m, i) => (
-              <MethodCard key={m.id} m={m} index={i} selected={m.id === methodId} deadline={m.id === "WALK_IN_TRANSFER" ? r?.expiresAt : undefined} onSelect={() => setMethodId(m.id)} />
+              <MethodCard
+                key={m.id}
+                m={m}
+                index={i}
+                selected={m.id === methodId}
+                deadline={m.id === "WALK_IN_TRANSFER" ? r?.expiresAt : undefined}
+                onSelect={() => setMethodId(m.id)}
+              />
             ))}
           </div>
 
@@ -106,7 +117,9 @@ export function LivePayment({ draft, onPay }: { draft: BookingDraft; onPay: (cho
                   </button>
                 ))}
               </div>
-              {method.interestRate > 0 && <p className="mt-2 text-xs text-ink-500">A {method.interestRate}% flexi-pay charge is added by the payment provider.</p>}
+              {method.interestRate > 0 && (
+                <p className="mt-2 text-xs text-ink-500">A {method.interestRate}% flexi-pay charge is added by the payment provider.</p>
+              )}
             </div>
           )}
 
@@ -136,7 +149,8 @@ export function LivePayment({ draft, onPay }: { draft: BookingDraft; onPay: (cho
           {hold && (
             <div className="mt-4 animate-[acc-reveal_0.3s_ease]">
               <p className="mb-3 text-[13.5px] text-ink-500">
-                We&apos;ll hold your seat. Pay by bank transfer before the deadline and quote your booking reference <strong className="text-ink-900">{r?.pnr}</strong>.
+                We&apos;ll hold your seat. Pay by bank transfer before the deadline and quote your booking reference{" "}
+                <strong className="text-ink-900">{r?.pnr}</strong>.
               </p>
               {opts.banks.length > 0 ? (
                 <div className="grid gap-2">
@@ -152,7 +166,9 @@ export function LivePayment({ draft, onPay }: { draft: BookingDraft; onPay: (cho
 
           <div className="mt-[18px] overflow-hidden rounded-xl border border-[#e8edf3]">
             <div className="flex items-center justify-between gap-4 bg-white px-3.5 py-3">
-              <span className="text-[11px] font-semibold uppercase tracking-[0.04em] text-[#8a94a6]">{flexi ? "Total (spread over instalments)" : "Total to pay"}</span>
+              <span className="text-[11px] font-semibold uppercase tracking-[0.04em] text-[#8a94a6]">
+                {flexi ? "Total (spread over instalments)" : "Total to pay"}
+              </span>
               <span className="text-lg font-extrabold text-blue">{naira(amount)}</span>
             </div>
           </div>
@@ -160,7 +176,11 @@ export function LivePayment({ draft, onPay }: { draft: BookingDraft; onPay: (cho
           <button type="button" onClick={submit} disabled={!method || (needsGateway && !gateway)} className={cn(btn, "mt-4")}>
             {hold ? "Hold my booking" : flexi ? `Continue with ${parts} instalments` : `Pay ${naira(amount)}`}
           </button>
-          {!hold && <p className="mt-2 text-center text-xs text-ink-500">You&apos;ll be taken to {gatewayName || "our payment partner"} to finish, then brought back here.</p>}
+          {!hold && (
+            <p className="mt-2 text-center text-xs text-ink-500">
+              You&apos;ll be taken to {gatewayName || "our payment partner"} to finish, then brought back here.
+            </p>
+          )}
         </div>
       )}
     </div>
@@ -187,7 +207,12 @@ function MethodCard({ m, index, selected, deadline, onSelect }: { m: PayOption; 
         selected ? "border-blue shadow-[0_0_0_3px_rgba(2,144,222,0.12)]" : "border-[#e8edf3] hover:border-[#bfe0f5]",
       )}
     >
-      <span className={cn("grid size-11 shrink-0 place-items-center rounded-xl transition-colors", selected ? "bg-blue text-white" : "bg-[rgba(2,144,222,0.08)] text-blue")}>
+      <span
+        className={cn(
+          "grid size-11 shrink-0 place-items-center rounded-xl transition-colors",
+          selected ? "bg-blue text-white" : "bg-[rgba(2,144,222,0.08)] text-blue",
+        )}
+      >
         <Icon className="size-5" />
       </span>
       <span className="min-w-0 flex-1">
@@ -197,7 +222,9 @@ function MethodCard({ m, index, selected, deadline, onSelect }: { m: PayOption; 
         </span>
         <span className="mt-0.5 block text-[13px] leading-[1.45] text-ink-500">{m.description}</span>
       </span>
-      <span className={cn("mt-1 grid size-5 shrink-0 place-items-center rounded-full border-2 transition-colors", selected ? "border-blue" : "border-[#cbd5e1]")}>
+      <span
+        className={cn("mt-1 grid size-5 shrink-0 place-items-center rounded-full border-2 transition-colors", selected ? "border-blue" : "border-[#cbd5e1]")}
+      >
         {selected && <span className="size-2.5 rounded-full bg-blue" />}
       </span>
     </button>

@@ -88,12 +88,7 @@
 
 @layer utilities {
   .hero-overlay {
-    background: linear-gradient(
-      180deg,
-      rgba(16, 28, 49, 0.72) 0%,
-      rgba(16, 28, 49, 0.45) 45%,
-      rgba(16, 28, 49, 0.85) 100%
-    );
+    background: linear-gradient(180deg, rgba(16, 28, 49, 0.72) 0%, rgba(16, 28, 49, 0.45) 45%, rgba(16, 28, 49, 0.85) 100%);
   }
   .no-scrollbar {
     scrollbar-width: none;
@@ -129,45 +124,100 @@
 
 /* Loaders, modals and page transitions (ported from tbils.com). */
 @keyframes indeterminate {
-  0% { left: -35%; }
-  100% { left: 100%; }
+  0% {
+    left: -35%;
+  }
+  100% {
+    left: 100%;
+  }
 }
 @keyframes pulse-dot {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.45; transform: scale(0.8); }
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(0.8);
+  }
 }
 @keyframes bob {
-  0%, 100% { transform: translateY(2px); }
-  50% { transform: translateY(-3px); }
+  0%,
+  100% {
+    transform: translateY(2px);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
 }
 @keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 @keyframes rise-in {
-  from { opacity: 0; transform: translateY(14px) scale(0.985); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 @keyframes fade-up {
-  from { opacity: 0; transform: translateY(16px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 @keyframes modal-in {
-  from { opacity: 0; transform: translateY(-12px) scale(0.96); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 @keyframes acc-reveal {
-  from { opacity: 0; transform: translateY(-6px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 @keyframes shimmer {
-  from { background-position: 100% 0; }
-  to { background-position: -100% 0; }
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
 }
 /* The travelling white gaps on a flight card's route line. */
 @keyframes route-flow {
-  0% { left: 8%; right: 100%; }
-  60%, 100% { left: 107%; right: -8%; }
+  0% {
+    left: 8%;
+    right: 100%;
+  }
+  60%,
+  100% {
+    left: 107%;
+    right: -8%;
+  }
 }
 .route-bar {
   position: relative;
@@ -216,7 +266,9 @@
   border-radius: 50%;
   background: #0290de;
   border: 3px solid #fff;
-  box-shadow: 0 0 0 1px #0290de, 0 2px 6px rgba(2, 144, 222, 0.35);
+  box-shadow:
+    0 0 0 1px #0290de,
+    0 2px 6px rgba(2, 144, 222, 0.35);
   cursor: pointer;
 }
 .dual-range::-moz-range-thumb {
@@ -280,29 +332,55 @@ html::-webkit-scrollbar-track {
 /* Driven by animation (not transition) with backwards fill, so once a reveal finishes it
    leaves no transform/delay behind and hover effects on the same element stay instant. */
 @keyframes reveal-in {
-  from { opacity: 0; transform: var(--reveal-from, translateY(24px)); }
-  to { opacity: 1; transform: none; }
+  from {
+    opacity: 0;
+    transform: var(--reveal-from, translateY(24px));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 [data-reveal]:not(.is-revealed),
 [data-reveal-stagger]:not(.is-revealed) > * {
   opacity: 0;
 }
-[data-reveal="left"] { --reveal-from: translateX(-28px); }
-[data-reveal="right"] { --reveal-from: translateX(28px); }
-[data-reveal="zoom"] { --reveal-from: scale(0.96); }
+[data-reveal="left"] {
+  --reveal-from: translateX(-28px);
+}
+[data-reveal="right"] {
+  --reveal-from: translateX(28px);
+}
+[data-reveal="zoom"] {
+  --reveal-from: scale(0.96);
+}
 [data-reveal].is-revealed {
   animation: reveal-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) var(--reveal-delay, 0ms) backwards;
 }
-[data-reveal-stagger] > * { --reveal-from: translateY(18px); }
+[data-reveal-stagger] > * {
+  --reveal-from: translateY(18px);
+}
 [data-reveal-stagger].is-revealed > * {
   animation: reveal-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
-[data-reveal-stagger].is-revealed > *:nth-child(2) { animation-delay: 70ms; }
-[data-reveal-stagger].is-revealed > *:nth-child(3) { animation-delay: 140ms; }
-[data-reveal-stagger].is-revealed > *:nth-child(4) { animation-delay: 210ms; }
-[data-reveal-stagger].is-revealed > *:nth-child(5) { animation-delay: 280ms; }
-[data-reveal-stagger].is-revealed > *:nth-child(6) { animation-delay: 350ms; }
-[data-reveal-stagger].is-revealed > *:nth-child(n + 7) { animation-delay: 420ms; }
+[data-reveal-stagger].is-revealed > *:nth-child(2) {
+  animation-delay: 70ms;
+}
+[data-reveal-stagger].is-revealed > *:nth-child(3) {
+  animation-delay: 140ms;
+}
+[data-reveal-stagger].is-revealed > *:nth-child(4) {
+  animation-delay: 210ms;
+}
+[data-reveal-stagger].is-revealed > *:nth-child(5) {
+  animation-delay: 280ms;
+}
+[data-reveal-stagger].is-revealed > *:nth-child(6) {
+  animation-delay: 350ms;
+}
+[data-reveal-stagger].is-revealed > *:nth-child(n + 7) {
+  animation-delay: 420ms;
+}
 
 /* Hover: cards lift with the brand-tinted shadow; images inside zoom gently. */
 .hover-lift {
@@ -331,8 +409,12 @@ html::-webkit-scrollbar-track {
     color 0.18s ease,
     opacity 0.18s ease;
 }
-.press:hover { transform: translateY(-1px); }
-.press:active { transform: translateY(1px) scale(0.98); }
+.press:hover {
+  transform: translateY(-1px);
+}
+.press:active {
+  transform: translateY(1px) scale(0.98);
+}
 /* Sliding underline for text links. */
 .link-underline {
   background-image: linear-gradient(currentColor, currentColor);
@@ -341,41 +423,81 @@ html::-webkit-scrollbar-track {
   background-repeat: no-repeat;
   transition: background-size 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.link-underline:hover { background-size: 100% 1.5px; }
+.link-underline:hover {
+  background-size: 100% 1.5px;
+}
 /* Gentle float for decorative icons. */
 @keyframes float-y {
-  0%, 100% { transform: translateY(0) rotate(-12deg); }
-  50% { transform: translateY(-8px) rotate(-12deg); }
+  0%,
+  100% {
+    transform: translateY(0) rotate(-12deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(-12deg);
+  }
 }
-.float-y { animation: float-y 5s ease-in-out infinite; }
+.float-y {
+  animation: float-y 5s ease-in-out infinite;
+}
 /* Slow float for a few key cards (promo, next trip, auth panel). Put it on a wrapper, not on an
    element that also uses data-reveal or hover-lift (both drive transform). Pauses on hover. */
 @keyframes float-card {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-7px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
 }
-.float-card { animation: float-card 6s ease-in-out infinite; }
-.float-card:hover { animation-play-state: paused; }
-.float-delay { animation-delay: -3s; }
+.float-card {
+  animation: float-card 6s ease-in-out infinite;
+}
+.float-card:hover {
+  animation-play-state: paused;
+}
+.float-delay {
+  animation-delay: -3s;
+}
 /* Soft glow ring that breathes behind status icons. */
 @keyframes glow-ring {
-  0% { box-shadow: 0 0 0 0 rgba(2, 144, 222, 0.28); }
-  70% { box-shadow: 0 0 0 14px rgba(2, 144, 222, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(2, 144, 222, 0); }
+  0% {
+    box-shadow: 0 0 0 0 rgba(2, 144, 222, 0.28);
+  }
+  70% {
+    box-shadow: 0 0 0 14px rgba(2, 144, 222, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(2, 144, 222, 0);
+  }
 }
-.glow-ring { animation: glow-ring 2.4s ease-out infinite; }
+.glow-ring {
+  animation: glow-ring 2.4s ease-out infinite;
+}
 
 /* Page heroes: the photo settles from a slight zoom; headings rise in, the search console after. */
 @keyframes hero-zoom {
-  from { transform: scale(1.08); }
-  to { transform: scale(1); }
+  from {
+    transform: scale(1.08);
+  }
+  to {
+    transform: scale(1);
+  }
 }
-.hero-zoom { animation: hero-zoom 14s cubic-bezier(0.16, 1, 0.3, 1) both; }
-.hero-in { animation: rise-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) var(--hero-delay, 0ms) backwards; }
+.hero-zoom {
+  animation: hero-zoom 14s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.hero-in {
+  animation: rise-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) var(--hero-delay, 0ms) backwards;
+}
 /* Chart bars grow up from the baseline, one after another (delay set per bar). */
 @keyframes bar-grow {
-  from { transform: scaleY(0); }
-  to { transform: scaleY(1); }
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
 }
 .bar-grow {
   transform-box: fill-box;
@@ -385,17 +507,33 @@ html::-webkit-scrollbar-track {
 
 /* Dropdowns, calendars and popovers (<Floating>) open with a short drop/rise toward their trigger. */
 @keyframes pop-in {
-  from { opacity: 0; transform: translateY(var(--pop-from, -6px)) scale(0.98); }
-  to { opacity: 1; transform: none; }
+  from {
+    opacity: 0;
+    transform: translateY(var(--pop-from, -6px)) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
-.pop-in { animation: pop-in 0.18s cubic-bezier(0.16, 1, 0.3, 1); }
-.pop-in[data-placement="top"] { --pop-from: 6px; }
+.pop-in {
+  animation: pop-in 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.pop-in[data-placement="top"] {
+  --pop-from: 6px;
+}
 
 /* Route-change progress bar (NavProgress). */
 @keyframes nav-progress {
-  0% { width: 0; }
-  60% { width: 70%; }
-  100% { width: 88%; }
+  0% {
+    width: 0;
+  }
+  60% {
+    width: 70%;
+  }
+  100% {
+    width: 88%;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

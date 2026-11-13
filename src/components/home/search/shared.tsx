@@ -112,7 +112,9 @@ export function Floating({
       data-placement={placement}
       // Transparent until measured, so the first frame never flashes at the wrong spot. (Opacity, not
       // visibility: content that takes focus on open, like a calendar day or a search box, must be focusable.)
-      style={pos ? { position: "fixed", top: pos.top, left: pos.left, width: pos.width } : { position: "fixed", top: 0, left: 0, opacity: 0, pointerEvents: "none" }}
+      style={
+        pos ? { position: "fixed", top: pos.top, left: pos.left, width: pos.width } : { position: "fixed", top: 0, left: 0, opacity: 0, pointerEvents: "none" }
+      }
       className={cn("pop-in z-[2350]", className)}
     >
       {typeof children === "function" ? children(placement) : children}

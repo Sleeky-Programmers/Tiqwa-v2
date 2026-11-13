@@ -10,7 +10,8 @@ import { ItineraryBand } from "@/components/flights/ItineraryBand";
 import { InlineLoader } from "@/components/ui/Feedback";
 import { formatDmy } from "@/components/home/search/DatePicker";
 import { bankTransfer } from "@/data/booking";
-import { contact } from "@/data/contact";
+import { TransferProof } from "./TransferProof";
+import { useContact } from "@/components/layout/ContactProvider";
 import { getCountry } from "@/data/countries";
 import { bookingTotals } from "@/lib/booking/pricing";
 import { bookingRoutes, type BookingVariant } from "@/lib/booking/routes";
@@ -41,6 +42,7 @@ function Block({ title, children, className }: { title: string; children: ReactN
 
 /** Booking confirmation (tbils.com /booking-success), driven by the booking kept in sessionStorage. */
 export function BookingSuccess({ variant = "site" }: { variant?: BookingVariant }) {
+  const contact = useContact();
   const dash = variant === "dashboard";
   const routes = bookingRoutes(variant);
   const router = useRouter();
@@ -69,7 +71,10 @@ export function BookingSuccess({ variant = "site" }: { variant?: BookingVariant 
         <div className="mx-auto max-w-[560px] px-4 py-16 text-center">
           <h1 className="font-display text-2xl font-extrabold text-ink-900">No booking to show</h1>
           <p className="mt-2 text-sm text-ink-500">Complete a booking to see its confirmation here.</p>
-          <Link href={routes.search} className="mt-6 inline-block rounded-xl bg-[linear-gradient(90deg,#0290de,#014e78)] px-7 py-3 text-sm font-bold text-white">
+          <Link
+            href={routes.search}
+            className="mt-6 inline-block rounded-xl bg-[linear-gradient(90deg,#0290de,#014e78)] px-7 py-3 text-sm font-bold text-white"
+          >
             Search flights
           </Link>
         </div>
@@ -81,11 +86,11 @@ export function BookingSuccess({ variant = "site" }: { variant?: BookingVariant 
   // Card, transfer-through-checkout and flexi payments go through a gateway; bank/hold wait for a transfer.
   const paidOnline = payment.method !== "bank" && payment.method !== "hold";
   // Never show the demo account on a real booking.
-  const bank = liveBank ?? (draft.live ? null : { bank: bankTransfer.bankName, accountName: bankTransfer.accountName, accountNumber: bankTransfer.accountNumber });
+  const bank =
+    liveBank ?? (draft.live ? null : { bank: bankTransfer.bankName, accountName: bankTransfer.accountName, accountNumber: bankTransfer.accountNumber });
   const t = bookingTotals(draft);
   const status = payment.status;
-  const heading =
-    status === "confirmed" ? "Your booking is confirmed!" : status === "processing" ? "We're confirming your transfer" : "Your seat is on hold";
+  const heading = status === "confirmed" ? "Your booking is confirmed!" : status === "processing" ? "We're confirming your transfer" : "Your seat is on hold";
   const sub =
     status === "confirmed"
       ? `Your e-ticket has been sent to ${travellers[0]?.email}. Have a great trip!`
@@ -161,7 +166,9 @@ export function BookingSuccess({ variant = "site" }: { variant?: BookingVariant 
               ))}
             </dl>
           )}
-          {!paidOnline && !bank && <p className="text-sm text-ink-500">Our bank details are on their way to your email. Quote booking reference {reservation.pnr} when you pay.</p>}
+          {!paidOnline && !bank && (
+            <p className="text-sm text-ink-500">Our bank details are on their way to your email. Quote booking reference {reservation.pnr} when you pay.</p>
+          )}
           {!paidOnline && bank && (
             <>
               <p className="mb-4 text-sm text-ink-500">
@@ -181,6 +188,7 @@ export function BookingSuccess({ variant = "site" }: { variant?: BookingVariant 
                   </div>
                 ))}
               </dl>
+              {draft.live && payment.transactionRef && <TransferProof reference={payment.transactionRef} />}
             </>
           )}
         </Block>
@@ -190,7 +198,7 @@ export function BookingSuccess({ variant = "site" }: { variant?: BookingVariant 
             {travellers.map((p, i) => (
               <dl key={i} className="grid gap-3 rounded-xl border border-[#eef1f5] p-4 sm:grid-cols-3">
                 {[
-                  ["Passenger Name", `${p.title} ${p.firstName} ${p.middleName ? p.middleName + " " : ""}${p.surname}`],
+                  ["Passenger Name", `${p.title} ${p.firstName} ${p.middleName ? `${p.middleName} ` : ""}${p.surname}`],
                   ["Nationality", getCountry(p.passportCountry || p.country)?.name ?? "—"],
                   ["Gender", p.gender],
                   ["Date of birth", p.dob ? formatDmy(p.dob) : "—"],
@@ -210,42 +218,44 @@ export function BookingSuccess({ variant = "site" }: { variant?: BookingVariant 
 
         <Block title="Flight Details">
           <div className="space-y-3">
-            {offer.journeys.flatMap((j) => j.segments).map((s) => (
-              <div key={s.id} className="flex flex-col gap-4 rounded-xl border border-[#eef1f5] p-4 sm:flex-row sm:items-center">
-                <div className="flex items-center gap-3 sm:w-[180px]">
-                  <Image src={airlineLogo(s.airline.code)} alt="" width={32} height={32} className="size-8 rounded object-contain" />
-                  <div>
-                    <p className="text-sm font-bold text-ink-900">{s.airline.name}</p>
-                    <p className="text-xs text-ink-500">{s.flightNumber}</p>
+            {offer.journeys
+              .flatMap((j) => j.segments)
+              .map((s) => (
+                <div key={s.id} className="flex flex-col gap-4 rounded-xl border border-[#eef1f5] p-4 sm:flex-row sm:items-center">
+                  <div className="flex items-center gap-3 sm:w-[180px]">
+                    <Image src={airlineLogo(s.airline.code)} alt="" width={32} height={32} className="size-8 rounded object-contain" />
+                    <div>
+                      <p className="text-sm font-bold text-ink-900">{s.airline.name}</p>
+                      <p className="text-xs text-ink-500">{s.flightNumber}</p>
+                    </div>
+                  </div>
+                  <div className="flex flex-1 items-center justify-between gap-3">
+                    <div>
+                      <p className="text-lg font-bold text-ink-900">{fmtTime(s.depart)}</p>
+                      <p className="text-xs text-ink-500">
+                        {s.from.city} ({s.from.code}) · {fmtLongDate(s.depart)}
+                      </p>
+                    </div>
+                    <span className="text-xs text-ink-500">{fmtDuration(s.durationMin)}</span>
+                    <div className="text-right">
+                      <p className="text-lg font-bold text-ink-900">{fmtTime(s.arrive)}</p>
+                      <p className="text-xs text-ink-500">
+                        {s.to.city} ({s.to.code}) · {fmtLongDate(s.arrive)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 sm:w-[200px]">
+                    <div>
+                      <p className={label}>Check in</p>
+                      <p className="text-xs font-semibold text-ink-900">{offer.fareRules.checkedBaggage}</p>
+                    </div>
+                    <div>
+                      <p className={label}>Cabin</p>
+                      <p className="text-xs font-semibold text-ink-900">{cabinLabel[offer.cabin]}</p>
+                    </div>
                   </div>
                 </div>
-                <div className="flex flex-1 items-center justify-between gap-3">
-                  <div>
-                    <p className="text-lg font-bold text-ink-900">{fmtTime(s.depart)}</p>
-                    <p className="text-xs text-ink-500">
-                      {s.from.city} ({s.from.code}) · {fmtLongDate(s.depart)}
-                    </p>
-                  </div>
-                  <span className="text-xs text-ink-500">{fmtDuration(s.durationMin)}</span>
-                  <div className="text-right">
-                    <p className="text-lg font-bold text-ink-900">{fmtTime(s.arrive)}</p>
-                    <p className="text-xs text-ink-500">
-                      {s.to.city} ({s.to.code}) · {fmtLongDate(s.arrive)}
-                    </p>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3 sm:w-[200px]">
-                  <div>
-                    <p className={label}>Check in</p>
-                    <p className="text-xs font-semibold text-ink-900">{offer.fareRules.checkedBaggage}</p>
-                  </div>
-                  <div>
-                    <p className={label}>Cabin</p>
-                    <p className="text-xs font-semibold text-ink-900">{cabinLabel[offer.cabin]}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
+              ))}
           </div>
         </Block>
 
@@ -289,9 +299,24 @@ export function BookingSuccess({ variant = "site" }: { variant?: BookingVariant 
         </Block>
 
         <p className="text-center text-sm text-ink-500">
-          Need help? Hotline: <a className="font-semibold text-ink-900" href={contact.phone.href}>{contact.phone.display}</a> · WhatsApp:{" "}
-          <a className="font-semibold text-ink-900" href={contact.whatsapp.href}>{contact.whatsapp.display}</a> · Email:{" "}
-          <a className="font-semibold text-ink-900" href={contact.email.href}>{contact.email.display}</a>
+          Need help? Hotline:{" "}
+          <a className="font-semibold text-ink-900" href={contact.phone.href}>
+            {contact.phone.display}
+          </a>{" "}
+          ·{" "}
+          {contact.whatsapp && (
+            <>
+              WhatsApp:{" "}
+              <a className="font-semibold text-ink-900" href={contact.whatsapp.href}>
+                {contact.whatsapp.display}
+              </a>{" "}
+              ·{" "}
+            </>
+          )}
+          Email:{" "}
+          <a className="font-semibold text-ink-900" href={contact.email.href}>
+            {contact.email.display}
+          </a>
         </p>
       </div>
     </div>

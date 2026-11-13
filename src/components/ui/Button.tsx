@@ -12,14 +12,10 @@ const variants = {
 type Props = {
   variant?: keyof typeof variants;
   className?: string;
-} & ({ href: string } & Omit<ComponentProps<typeof Link>, "href" | "className"> | ({ href?: undefined } & ComponentProps<"button">));
+} & (({ href: string } & Omit<ComponentProps<typeof Link>, "href" | "className">) | ({ href?: undefined } & ComponentProps<"button">));
 
 export function Button({ variant = "primary", className, ...props }: Props) {
-  const cls = cn(
-    "press inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-bold",
-    variants[variant],
-    className,
-  );
+  const cls = cn("press inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-bold", variants[variant], className);
   if (props.href !== undefined) {
     return <Link {...props} className={cls} />;
   }
