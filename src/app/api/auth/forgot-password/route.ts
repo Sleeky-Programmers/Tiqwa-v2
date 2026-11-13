@@ -1,3 +1,4 @@
+import { clientKey, underLimit } from "@/lib/api/idempotency";
 import { fail, isLive, mockDelay, upstream } from "@/lib/api/upstream";
 
 /**
@@ -10,6 +11,9 @@ export async function POST(request: Request) {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return fail({ code: "VALIDATION", status: 422, message: "Enter a valid email address.", fields: { email: "Enter a valid email address" } });
   }
+
+  if (!(await underLimit(`forgot:${clientKey(request)}`, 10, 15 * 60)))
+    return fail({ code: "RATE_LIMITED", status: 429, message: "Too many attempts. Please wait a few minutes and try again." });
 
   if (!isLive()) {
     await mockDelay(800);

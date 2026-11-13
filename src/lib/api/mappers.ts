@@ -239,7 +239,8 @@ export function mapBooking(b: WlBookingDetails): HistoryBooking | null {
     offer,
     travellers,
     reservation: {
-      pnr: b.reference,
+      // Some bookings come back without a reference; fall back to the booking id so the booking still has a key.
+      pnr: b.reference || String(b.booking_id ?? ""),
       airlinePnr: b.pnr || "Pending",
       orderNo: String(b.booking_id ?? ""),
       expiresAt: b.expires_at || b.created_at || new Date().toISOString(),

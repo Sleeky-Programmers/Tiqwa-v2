@@ -8,6 +8,8 @@ export type Rewards = {
   referrals: { name: string; date: string }[];
   payouts: { amount: number; date: string }[];
   canWithdraw: boolean;
+  /** Banks a withdrawal can be paid into. */
+  banks: string[];
 };
 
 const MOCK: Rewards = {
@@ -21,6 +23,7 @@ const MOCK: Rewards = {
   ],
   payouts: [{ amount: 5000, date: "2026-08-01" }],
   canWithdraw: true,
+  banks: ["Access Bank", "GTBank", "First Bank", "UBA", "Zenith Bank"],
 };
 
 /** GET → Rewards. Live: /user/rewards (referral code, earnings and history). */
@@ -30,7 +33,9 @@ export async function GET() {
     await mockDelay(400);
     return Response.json(MOCK);
   }
-  const res = await upstream<{ rewards?: WlRewards } & WlRewards>("/user/rewards", { fallback: "We couldn't load your rewards right now." });
+  const res = await upstream<{ rewards?: WlRewards; nigeria_banks?: { name?: string }[] } & WlRewards>("/user/rewards", {
+    fallback: "We couldn't load your rewards right now.",
+  });
   if (!res.ok) return fail(res.error);
   const r = res.data?.rewards ?? res.data ?? {};
   const body: Rewards = {
@@ -40,6 +45,7 @@ export async function GET() {
     referrals: (r.referral_history ?? []).map((h) => ({ name: h.referred_user ?? "Traveller", date: h.date ?? "" })),
     payouts: (r.referral_payment_history ?? []).map((p) => ({ amount: Number(p.amount ?? 0), date: p.date ?? "" })),
     canWithdraw: !!r.allow_withdraw,
+    banks: (res.data?.nigeria_banks ?? []).flatMap((b) => (b.name?.trim() ? [b.name.trim()] : [])),
   };
   return Response.json(body);
 }

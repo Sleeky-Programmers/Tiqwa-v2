@@ -143,11 +143,13 @@ function EmailForm() {
   const { live } = useSession();
   const [step, setStep] = useState<"view" | "enter" | "code">("view");
   const [email, setEmail] = useState("");
+  const [current, setCurrent] = useState("");
   const [code, setCode] = useState("");
   const [errors, setErrors] = useState<Errors>({});
   const [busy, setBusy] = useState(false);
   const reset = () => {
     setStep("view");
+    setCurrent("");
     setEmail("");
     setCode("");
     setErrors({});
@@ -157,7 +159,7 @@ function EmailForm() {
     e?.preventDefault();
     if (email.trim().toLowerCase() === user.email.toLowerCase()) return setErrors({ email: "That's already your email address" });
     setBusy(true);
-    const { errors } = await submit("email-start", { email });
+    const { errors } = await submit("email-start", { email, currentPassword: current });
     setBusy(false);
     if (Object.keys(errors).length) return setErrors(errors);
     setErrors({});
@@ -212,7 +214,21 @@ function EmailForm() {
               className={cn(inputCls, (errors.email || errors.form) && "border-error")}
             />
           </Field>
-          <FormActions dirty={!!email.trim()} saving={busy} label="Send code" onCancel={reset} />
+          <div className="mt-4">
+            <Field label="Current password" htmlFor={`${id}-cur`} error={errors.currentPassword}>
+              <PasswordInput
+                id={`${id}-cur`}
+                value={current}
+                onChange={(x) => {
+                  setCurrent(x);
+                  setErrors({});
+                }}
+                error={errors.currentPassword}
+                autoComplete="current-password"
+              />
+            </Field>
+          </div>
+          <FormActions dirty={!!email.trim() && !!current} saving={busy} label="Send code" onCancel={reset} />
         </form>
       ) : (
         <form onSubmit={confirm} noValidate className="animate-[acc-reveal_0.3s_ease]">

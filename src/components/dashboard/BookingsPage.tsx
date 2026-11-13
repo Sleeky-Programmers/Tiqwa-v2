@@ -73,7 +73,8 @@ export function BookingsPage() {
   const [status, setStatus] = useState("all");
 
   const openRef = params.get("booking");
-  const selected = bookings?.find((b) => b.reservation.pnr === openRef) ?? null;
+  // Only a reference in the URL opens a booking; a booking with no reference must never match an empty one.
+  const selected = openRef ? (bookings?.find((b) => b.reservation.pnr === openRef) ?? null) : null;
   // Opening a booking from the URL lands on its tab.
   const tab: Tab = (params.get("tab") as Tab) ?? (selected && !isUpcoming(selected) ? "past" : "upcoming");
 

@@ -1,3 +1,4 @@
+import { clientKey, underLimit } from "@/lib/api/idempotency";
 import { clearSession, mockProfile, setSession, toProfile } from "@/lib/api/session";
 import type { WlUser } from "@/lib/api/types";
 import { fail, isLive, mockDelay, upstream } from "@/lib/api/upstream";
@@ -12,6 +13,9 @@ export async function POST(request: Request) {
   if (!EMAIL.test(email))
     return fail({ code: "VALIDATION", status: 422, message: "Enter a valid email address.", fields: { email: "Enter a valid email address" } });
   if (!password) return fail({ code: "VALIDATION", status: 422, message: "Enter your password.", fields: { password: "Enter your password" } });
+
+  if (!(await underLimit(`login:${clientKey(request)}`, 20, 15 * 60)))
+    return fail({ code: "RATE_LIMITED", status: 429, message: "Too many attempts. Please wait a few minutes and try again." });
 
   if (!isLive()) {
     // Demo mode: any well-formed email and password signs in to the demo account.
@@ -28,7 +32,9 @@ export async function POST(request: Request) {
   });
   if (!res.ok) {
     await clearSession();
-    return fail(res.error);
+    // An account that was never verified is sent to the verification step instead of a dead end.
+    const unverified = res.error.status === 403 || /verif/i.test(res.error.message);
+    return fail(unverified ? { ...res.error, code: "EMAIL_UNVERIFIED" } : res.error);
   }
   if (!res.data?.token) return fail({ code: "UPSTREAM_ERROR", status: 502, message: "We couldn't sign you in right now. Please try again." });
   await setSession(res.data.token);

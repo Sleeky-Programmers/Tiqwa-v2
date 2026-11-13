@@ -14,9 +14,9 @@ const rename = (e: ApiError, map: Record<string, string>): ApiError => {
 /**
  * POST { action, ... } — account changes.
  *  - "name":          { firstName, surname, middleName?, phone }  → PUT  /user/profile/update
- *  - "password":      { currentPassword, password }               → POST /user/change-password
- *  - "email-start":   { email }                                   → POST /user/email/change
- *  - "email-confirm": { email, code }                             → POST /user/email/change/confirm
+ *  - "password":      { currentPassword, password }               → POST /user/change-password       (current_password, new_password)
+ *  - "email-start":   { email, currentPassword }                  → POST /user/email/change          (new_email, current_password)
+ *  - "email-confirm": { email, code }                             → POST /user/email/change/confirm  (new_email, token)
  * Title and middle name have no endpoint and are saved on the device.
  */
 export async function POST(request: Request) {
@@ -69,15 +69,17 @@ async function changePassword(body: Record<string, unknown>) {
   }
   const res = await upstream("/user/change-password", {
     method: "POST",
-    body: { current_password: current, password: next, password_confirmation: next },
+    body: { current_password: current, new_password: next },
     fallback: "We couldn't change your password right now. Please try again.",
   });
-  return res.ok ? Response.json({ ok: true }) : fail(rename(res.error, { current_password: "currentPassword", password_confirmation: "password" }));
+  return res.ok ? Response.json({ ok: true }) : fail(rename(res.error, { current_password: "currentPassword", new_password: "password" }));
 }
 
 async function startEmailChange(body: Record<string, unknown>) {
   const email = String(body.email ?? "").trim();
+  const current = String(body.currentPassword ?? "");
   if (!EMAIL.test(email)) return field("email", "Enter a valid email address");
+  if (!current) return field("currentPassword", "Enter your current password");
 
   if (!isLive()) {
     await mockDelay(800);
@@ -85,10 +87,10 @@ async function startEmailChange(body: Record<string, unknown>) {
   }
   const res = await upstream("/user/email/change", {
     method: "POST",
-    body: { email },
+    body: { new_email: email, current_password: current },
     fallback: "We couldn't start the email change right now. Please try again.",
   });
-  return res.ok ? Response.json({ ok: true }) : fail(res.error);
+  return res.ok ? Response.json({ ok: true }) : fail(rename(res.error, { new_email: "email", current_password: "currentPassword" }));
 }
 
 async function confirmEmailChange(body: Record<string, unknown>) {
@@ -103,8 +105,8 @@ async function confirmEmailChange(body: Record<string, unknown>) {
   }
   const res = await upstream("/user/email/change/confirm", {
     method: "POST",
-    body: { email, token: code },
+    body: { new_email: email, token: code },
     fallback: "That code didn't work. Check it and try again.",
   });
-  return res.ok ? Response.json({ ok: true }) : fail(rename(res.error, { token: "code" }));
+  return res.ok ? Response.json({ ok: true }) : fail(rename(res.error, { token: "code", new_email: "email" }));
 }
