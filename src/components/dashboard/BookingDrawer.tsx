@@ -3,12 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Download, MessageCircle, Printer, X } from "lucide-react";
-import { BookingDetailsBody, CancelDialog } from "@/components/booking/BookingDetails";
+import { BookingDetailsBody } from "@/components/booking/BookingDetails";
+import { LivePayment, type LiveChoice } from "@/components/checkout/LivePayment";
+import { postJson } from "@/components/ui/form";
 import { ProcessingOverlay } from "@/components/ui/Feedback";
 import { toast } from "@/components/ui/Toast";
-import { contact } from "@/data/contact";
-import { fullName, useProfile } from "@/lib/account";
-import { isPast, updateBooking, type HistoryBooking } from "@/lib/booking/history";
+import { useContact } from "@/components/layout/ContactProvider";
+import { updateBooking, type HistoryBooking } from "@/lib/booking/history";
 import { bookingTotals } from "@/lib/booking/pricing";
 import { saveBooking } from "@/lib/booking/store";
 import { fmtLongDate, naira } from "@/lib/flights/format";
@@ -17,16 +18,17 @@ import { ghostBtn, outlineBtn, primaryBtn, StatusBadge } from "./ui";
 
 /**
  * Right-hand slide-in panel with one booking's details and actions.
- * Live bookings: "Pay now" restarts payment with the backend (card via the first active gateway) and
- * cancelling sends a request to the support team (the backend has no cancel endpoint).
- * Demo bookings: both are simulated in localStorage via `updateBooking`.
+ * Live bookings: "Pay now" restarts payment with the backend (card via the first active gateway).
+ * Demo bookings: it is simulated in localStorage via `updateBooking`.
+ * There is no cancel action: the backend does not let customers cancel a booking.
  */
 export function BookingDrawer({ booking, onClose, onChanged }: { booking: HistoryBooking | null; onClose: () => void; onChanged: () => void }) {
   const [visible, setVisible] = useState<HistoryBooking | null>(booking);
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
-  const [confirmCancel, setConfirmCancel] = useState(false);
-  const user = useProfile();
+  const contact = useContact();
+  /** Reference of the booking whose payment options are open. */
+  const [choosing, setChoosing] = useState<string | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
   // Keep the last booking mounted during the slide-out animation.
@@ -48,20 +50,19 @@ export function BookingDrawer({ booking, onClose, onChanged }: { booking: Histor
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     panelRef.current?.focus();
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && !confirmCancel && onClose();
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     document.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = prev;
       document.removeEventListener("keydown", onKey);
     };
-  }, [booking, onClose, confirmCancel]);
+  }, [booking, onClose]);
 
   if (!visible || typeof document === "undefined") return null;
   const b = visible;
   const t = bookingTotals(b);
   const ref = b.reservation.pnr;
   const canPay = b.status === "hold" || b.status === "pending";
-  const canCancel = (b.status === "confirmed" || b.status === "hold" || b.status === "pending") && !isPast(b);
   const isReturn = b.search.trip === "round";
 
   /** Mock server round-trip; `change` is built after the wait so timestamps are real. */
@@ -74,58 +75,43 @@ export function BookingDrawer({ booking, onClose, onChanged }: { booking: Histor
     toast.success(done);
   };
 
-  const payLive = async () => {
-    setBusy("Connecting to secure payment...");
+  /** Start payment with the method the customer picked, then hand over to the gateway. */
+  const payWith = async (choice: LiveChoice) => {
+    setBusy(choice.method === "WALK_IN_TRANSFER" ? "Holding your seat, please wait..." : "Connecting to secure payment...");
     try {
-      const opts = await fetch("/api/payment-options").then((r) => r.json());
-      const method = opts?.methods?.find((m: { id: string }) => m.id === "CARD") ?? opts?.methods?.find((m: { id: string }) => m.id !== "WALK_IN_TRANSFER");
-      const gateway = opts?.gateways?.[0];
-      if (!method || !gateway) throw new Error("Online payment isn't available right now. Please contact support to pay.");
-      const res = await fetch("/api/bookings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "pay", bookingId: b.reservation.bookingId, flightId: b.reservation.flightId, reference: ref, method: method.id, gateway: gateway.id }),
+      const { errors, data } = await postJson<{ authorizationUrl?: string; transactionRef?: string; held?: boolean; alreadyPaid?: boolean }>("/api/bookings", {
+        action: "pay",
+        bookingId: b.reservation.bookingId,
+        flightId: b.reservation.flightId,
+        reference: ref,
+        ...choice,
       });
-      const json = await res.json().catch(() => null);
-      if (res.ok && json?.alreadyPaid) {
+      if (Object.keys(errors).length || !data) throw new Error(errors.form ?? Object.values(errors)[0]);
+      if (data.alreadyPaid) {
         // Settled elsewhere (another tab or device); refresh instead of opening a second payment.
         setBusy(null);
+        setChoosing(null);
         onChanged();
         toast.success("This booking is already paid. We've refreshed its status.");
         return;
       }
-      if (!res.ok || !json?.authorizationUrl) throw new Error(json?.error?.message ?? "We couldn't start your payment. Please try again.");
-      saveBooking({ ...b, payment: { ...b.payment, method: "card", methodLabel: `${method.title} via ${gateway.name}`, status: "processing" } });
-      sessionStorage.setItem("tbils.paymentReturn", JSON.stringify({ variant: "dashboard", reference: ref }));
-      window.location.assign(json.authorizationUrl);
-    } catch (e) {
-      setBusy(null);
-      toast.error(e instanceof Error ? e.message : "We couldn't start your payment.");
-    }
-  };
-
-  const requestCancel = async () => {
-    setConfirmCancel(false);
-    setBusy("Sending your cancellation request...");
-    try {
-      const res = await fetch("/api/contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: fullName(user) || "TBiLS customer",
-          email: user.email,
-          phone: user.phone,
-          subject: `Cancellation request: ${ref}`,
-          message: `Please cancel booking ${ref} (${b.offer.journeys[0].from.code} to ${b.offer.journeys[0].to.code}, departing ${fmtLongDate(b.offer.journeys[0].depart)}). Airline PNR: ${b.reservation.airlinePnr}.`,
-        }),
+      if (data.held) {
+        setBusy(null);
+        setChoosing(null);
+        onChanged();
+        toast.success("Your seat is on hold. Pay by bank transfer before the deadline.");
+        return;
+      }
+      if (!data.authorizationUrl) throw new Error();
+      saveBooking({
+        ...b,
+        payment: { ...b.payment, method: choice.kind, methodLabel: choice.label, status: "processing", transactionRef: data.transactionRef ?? null },
       });
-      const json = await res.json().catch(() => null);
-      if (!res.ok) throw new Error(json?.error?.message ?? "We couldn't send your request.");
-      toast.success("Cancellation request sent. Our team will confirm by email, including any refund under the fare rules.");
+      sessionStorage.setItem("tbils.paymentReturn", JSON.stringify({ variant: "dashboard", reference: ref }));
+      window.location.assign(data.authorizationUrl);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "We couldn't send your request. Please contact support.");
-    } finally {
       setBusy(null);
+      toast.error(e instanceof Error && e.message ? e.message : "We couldn't start your payment. Please try again.");
     }
   };
 
@@ -136,24 +122,29 @@ export function BookingDrawer({ booking, onClose, onChanged }: { booking: Histor
         const now = new Date();
         return {
           status: "confirmed",
-          payment: { ...b.payment, method: "paystack", status: "confirmed", paidAt: now.toISOString(), transactionRef: `T${now.getTime()}`, amount: t.payable, fee: t.gatewayFee },
+          payment: {
+            ...b.payment,
+            method: "paystack",
+            status: "confirmed",
+            paidAt: now.toISOString(),
+            transactionRef: `T${now.getTime()}`,
+            amount: t.payable,
+            fee: t.gatewayFee,
+          },
         };
       },
       `Payment received. Booking ${ref} is confirmed.`,
     );
-
-  const cancel = () => {
-    if (b.live) return requestCancel();
-    setConfirmCancel(false);
-    act("Cancelling your booking...", () => ({ status: "cancelled", cancelledAt: new Date().toISOString(), payment: b.payment }), `Booking ${ref} has been cancelled.`);
-  };
 
   return createPortal(
     <>
       <div
         aria-hidden
         onClick={onClose}
-        className={cn("fixed inset-0 z-[2200] bg-[rgba(5,20,35,0.55)] backdrop-blur-[4px] transition-opacity duration-300 print:hidden", open ? "opacity-100" : "opacity-0")}
+        className={cn(
+          "fixed inset-0 z-[2200] bg-[rgba(5,20,35,0.55)] backdrop-blur-[4px] transition-opacity duration-300 print:hidden",
+          open ? "opacity-100" : "opacity-0",
+        )}
       />
       <div
         ref={panelRef}
@@ -194,11 +185,16 @@ export function BookingDrawer({ booking, onClose, onChanged }: { booking: Histor
 
         <div className="flex-1 overflow-y-auto">
           <BookingDetailsBody b={b} />
+          {b.live && canPay && choosing === ref && (
+            <section aria-label="Payment" className="m-5 rounded-2xl border border-[#e3ebf3] bg-white p-5 animate-[acc-reveal_0.3s_ease] print:hidden">
+              <LivePayment draft={b} onPay={payWith} />
+            </section>
+          )}
         </div>
 
         <footer className="flex flex-wrap items-center gap-2 border-t border-[#eef1f5] bg-white px-5 py-4 print:hidden">
-          {canPay && (
-            <button type="button" onClick={b.live ? payLive : payNow} className={cn(primaryBtn, "press flex-1")}>
+          {canPay && !(b.live && choosing === ref) && (
+            <button type="button" onClick={b.live ? () => setChoosing(ref) : payNow} className={cn(primaryBtn, "press flex-1")}>
               Pay {naira(b.live ? b.payment.amount : t.payable)} now
             </button>
           )}
@@ -214,21 +210,16 @@ export function BookingDrawer({ booking, onClose, onChanged }: { booking: Histor
               <Download className="size-4" /> <span className="max-sm:hidden">E-ticket</span>
             </button>
           )}
-          <a href={contact.whatsapp.href} target="_blank" rel="noopener noreferrer" className={ghostBtn}>
-            <MessageCircle className="size-4" /> Support
-          </a>
-          {canCancel && (
-            <button type="button" onClick={() => setConfirmCancel(true)} className={cn(ghostBtn, "ml-auto text-error hover:bg-[#fef2f2] hover:text-error")}>
-              {b.live ? "Request cancellation" : "Cancel booking"}
-            </button>
+          {contact.whatsapp && (
+            <a href={contact.whatsapp.href} target="_blank" rel="noopener noreferrer" className={ghostBtn}>
+              <MessageCircle className="size-4" /> Support
+            </a>
           )}
         </footer>
       </div>
 
       <ProcessingOverlay open={!!busy} message={busy ?? ""} />
-      {confirmCancel && <CancelDialog live={!!b.live} onKeep={() => setConfirmCancel(false)} onCancel={cancel} refundNote={b.offer.fareRules.refundNote} />}
     </>,
     document.body,
   );
 }
-

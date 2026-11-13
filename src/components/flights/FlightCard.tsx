@@ -66,9 +66,7 @@ export function FlightCard({
             <Image src={airlineLogo(offer.airline.code)} alt="" width={30} height={30} className="size-[30px] shrink-0 rounded object-contain" />
             <h3 className="truncate text-sm font-bold text-[#1d1d1d]">{offer.airline.name}</h3>
           </div>
-          {tag && (
-            <span className="shrink-0 rounded-md bg-[#013557] px-3 py-1 text-xs font-semibold uppercase tracking-[0.04em] text-white">{tag}</span>
-          )}
+          {tag && <span className="shrink-0 rounded-md bg-[#013557] px-3 py-1 text-xs font-semibold uppercase tracking-[0.04em] text-white">{tag}</span>}
         </div>
         {offer.journeys.map((j, i) => (
           <RouteRow key={i} journey={j} className={i > 0 ? "border-t border-dashed border-[#e5e7eb]" : undefined} />

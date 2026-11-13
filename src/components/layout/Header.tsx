@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowRight, ChevronRight, User, X } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
-import { mainNav, mobileNav, suiteLinks } from "@/data/nav";
+import { useMenus } from "@/components/layout/ContactProvider";
+import { mainNav, mobileNav, menuOn } from "@/data/nav";
 import { initials, useProfile, useSession } from "@/lib/account";
 import { cn } from "@/lib/utils";
 
@@ -22,28 +23,21 @@ const isExternal = (href: string) => href.startsWith("http");
  */
 export function Header({ solid = false }: { solid?: boolean }) {
   const [scrolled, setScrolled] = useState(false);
-  const [suiteOpen, setSuiteOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const suiteRef = useRef<HTMLLIElement>(null);
+  const menus = useMenus();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > SCROLL_THRESHOLD);
-    const onDown = (e: MouseEvent) => {
-      if (suiteRef.current && !suiteRef.current.contains(e.target as Node)) setSuiteOpen(false);
-    };
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        setSuiteOpen(false);
         setDrawerOpen(false);
       }
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
-    document.addEventListener("mousedown", onDown);
     document.addEventListener("keydown", onKey);
     return () => {
       window.removeEventListener("scroll", onScroll);
-      document.removeEventListener("mousedown", onDown);
       document.removeEventListener("keydown", onKey);
     };
   }, []);
@@ -78,57 +72,24 @@ export function Header({ solid = false }: { solid?: boolean }) {
           <Logo tone={solidBar ? "dark" : "light"} />
 
           <ul className="ml-12 mr-auto hidden items-center gap-[15px] lg:flex">
-            {mainNav.slice(0, 2).map((l) => (
-              <li key={l.label}>
-                <Link href={l.href} className={link}>
-                  {l.label}
-                </Link>
-              </li>
-            ))}
-            <li className="relative" ref={suiteRef}>
-              <button
-                type="button"
-                aria-expanded={suiteOpen}
-                aria-haspopup="menu"
-                onClick={() => setSuiteOpen((v) => !v)}
-                className={cn(link, "flex items-center font-normal hover:scale-100")}
-              >
-                Tbils Suite
-                <span aria-hidden className={cn("ml-1.5 inline-block text-sm transition-transform duration-200", suiteOpen && "rotate-180")}>
-                  ▾
-                </span>
-              </button>
-              <ul
-                role="menu"
-                className={cn(
-                  "absolute inset-x-0 top-[calc(100%+10px)] z-[1100] rounded-[10px] border border-black/[0.08] bg-white py-[10px] shadow-[0_10px_30px_rgba(0,0,0,0.12)] transition-[opacity,transform] duration-150",
-                  suiteOpen ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-1 opacity-0",
-                )}
-              >
-                {suiteLinks.map((s) => (
-                  <li key={s.label} role="none">
-                    <a
-                      role="menuitem"
-                      href={s.href}
-                      tabIndex={suiteOpen ? 0 : -1}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={() => setSuiteOpen(false)}
-                      className="block px-[14px] py-[10px] text-sm font-medium text-black transition-colors hover:bg-[rgba(0,102,204,0.08)] hover:text-[#0066cc]"
-                    >
-                      {s.label}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </li>
-            {mainNav.slice(2).map((l) => (
-              <li key={l.label}>
-                <Link href={l.href} className={link}>
-                  {l.label}
-                </Link>
-              </li>
-            ))}
+            {menuOn(mainNav, menus)
+              .slice(0, 2)
+              .map((l) => (
+                <li key={l.label}>
+                  <Link href={l.href} className={link}>
+                    {l.label}
+                  </Link>
+                </li>
+              ))}
+            {menuOn(mainNav, menus)
+              .slice(2)
+              .map((l) => (
+                <li key={l.label}>
+                  <Link href={l.href} className={link}>
+                    {l.label}
+                  </Link>
+                </li>
+              ))}
           </ul>
 
           <div className="flex items-center gap-2">
@@ -185,7 +146,9 @@ function AccountButton() {
   if (status === "signedIn") {
     return (
       <Link href="/dashboard" className={cn(cls, "py-[7px] pl-[7px] pr-[18px]")}>
-        <span className="grid size-[26px] place-items-center rounded-full bg-white/25 text-[11px]">{initials(user) || <User aria-hidden className="size-4" />}</span>
+        <span className="grid size-[26px] place-items-center rounded-full bg-white/25 text-[11px]">
+          {initials(user) || <User aria-hidden className="size-4" />}
+        </span>
         My account
       </Link>
     );
@@ -201,7 +164,7 @@ function AccountButton() {
 function MobileDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
   const card =
     "flex w-full items-center gap-[14px] rounded-2xl border-[0.83px] px-4 py-[13px] text-left text-base font-semibold text-white transition-[background-color,transform] duration-[180ms] hover:translate-x-0.5";
-  const items = [...mobileNav];
+  const items = menuOn(mobileNav, useMenus());
   const signedIn = useSession().status === "signedIn";
   return (
     <>

@@ -21,7 +21,9 @@ export async function HolidayPackages() {
             <h2 id="packages-title" className="mt-[11px] font-display text-[28px] font-black leading-[1.05] tracking-[-0.01em] text-ink-900 md:text-[34px]">
               Holidays, sorted from flight to hotel
             </h2>
-            <p className="mt-[13px] max-w-[620px] text-sm font-medium leading-[21px] text-ink-500">Curated getaways with flights, stays and experiences, and you can still pay small small.</p>
+            <p className="mt-[13px] max-w-[620px] text-sm font-medium leading-[21px] text-ink-500">
+              Curated getaways with flights, stays and experiences, and you can still pay small small.
+            </p>
           </div>
           <Link href="/holiday-packages" className="link-underline inline-flex items-center gap-1 text-sm font-bold text-blue">
             View all packages <ArrowRight className="size-4" />

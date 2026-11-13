@@ -43,16 +43,6 @@ const tabs: { id: string; label: string; icon: ReactNode }[] = [
     ),
   },
   {
-    id: "properties",
-    label: "Properties",
-    icon: (
-      <svg viewBox="0 0 24 24" className={ic} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-        <rect x="3" y="6" width="18" height="13" rx="2" />
-        <path d="M3 10h18" />
-      </svg>
-    ),
-  },
-  {
     id: "study",
     label: "Study Abroad",
     icon: (
@@ -71,9 +61,16 @@ const tripOptions: { id: Trip; label: string }[] = [
 
 const other: Record<string, { text: string; cta: string; href: string }> = {
   hotels: { text: "Hotel booking is coming soon. Talk to our team and we'll book it for you.", cta: "Contact us", href: "/contact?type=hotel" },
-  holiday: { text: "Curated getaways with flights, stays and experiences. Browse our packages, or let our experts plan one for you.", cta: "Browse holiday packages", href: "/holiday-packages" },
-  properties: { text: "Browse verified homes, list your property, and connect with trustworthy buyers or renters.", cta: "Visit TBiLS Properties", href: "https://www.tbilprop.com/" },
-  study: { text: "Expert advisory and application support to help you study abroad with confidence.", cta: "Start my application", href: "/contact?type=study" },
+  holiday: {
+    text: "Curated getaways with flights, stays and experiences. Browse our packages, or let our experts plan one for you.",
+    cta: "Browse holiday packages",
+    href: "/holiday-packages",
+  },
+  study: {
+    text: "Expert advisory and application support to help you study abroad with confidence.",
+    cta: "Start my application",
+    href: "/contact?type=study",
+  },
 };
 
 const today = () => {

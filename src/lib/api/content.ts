@@ -7,20 +7,30 @@ import type { WlFlightDeal, WlHolidayPackage } from "./types";
 
 const API_URL = process.env.TIQWA_API_URL?.replace(/\/+$/, "");
 
-async function publicData<T>(path: string): Promise<T | null> {
+export async function publicData<T>(path: string): Promise<T | null> {
   "use cache";
-  cacheLife("hours");
-  if (!API_URL) return null;
+  if (!API_URL) {
+    cacheLife("hours");
+    return null;
+  }
+  let data: T | null = null;
+  let answered = false;
   try {
     const res = await fetch(`${API_URL}${path}`, {
       headers: { Accept: "application/json", Origin: process.env.APP_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:4545" },
       signal: AbortSignal.timeout(10_000),
     });
     const json = await res.json().catch(() => null);
-    return res.ok && json?.success !== false ? ((json?.data ?? null) as T | null) : null;
-  } catch {
-    return null;
-  }
+    if (res.ok && json?.success !== false) {
+      data = (json?.data ?? null) as T | null;
+      answered = true;
+    }
+  } catch {}
+  // An answer (even an empty one) is kept for an hour. A failure is kept for a minute, so a blip can't hide live data for long;
+  // it is not shorter because very short caches are treated as dynamic and would break prerendering.
+  if (answered) cacheLife("hours");
+  else cacheLife("minutes");
+  return data;
 }
 
 export type HolidayPackage = {

@@ -1,22 +1,44 @@
-import { fail, isLive, mockDelay, upstream } from "@/lib/api/upstream";
+import { fail, isLive, mockDelay, upstream, type ApiError } from "@/lib/api/upstream";
 
 const NAME = /^[A-Za-z][A-Za-z' -]{1,}$/;
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const field = (name: string, message: string) => fail({ code: "VALIDATION", status: 422, message, fields: { [name]: message } });
 
+/** Renames the backend's snake_case field names to the ones the forms use. */
+const rename = (e: ApiError, map: Record<string, string>): ApiError => {
+  if (!e.fields) return e;
+  const fields = Object.fromEntries(Object.entries(e.fields).map(([k, m]) => [map[k] ?? k, m]));
+  return { ...e, fields };
+};
+
 /**
- * POST { action, ... } — account changes the backend stores (name and phone).
- *  - "name":    { firstName, surname, middleName?, phone }  → PUT /user/profile/update
- *  - "details": { firstName, surname, phone }               → PUT /user/profile/update
- * Everything else on the profile (title, DOB, passport…) has no endpoint and is saved on the device.
- * Passwords change through /api/auth/forgot-password + /api/auth/reset-password.
+ * POST { action, ... } — account changes.
+ *  - "name":          { firstName, surname, middleName?, phone }  → PUT  /user/profile/update
+ *  - "password":      { currentPassword, password }               → POST /user/change-password
+ *  - "email-start":   { email }                                   → POST /user/email/change
+ *  - "email-confirm": { email, code }                             → POST /user/email/change/confirm
+ * Title and middle name have no endpoint and are saved on the device.
  */
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
-  const firstName = String(body?.firstName ?? "").trim();
-  const surname = String(body?.surname ?? "").trim();
-  const phone = String(body?.phone ?? "").replace(/[^\d+]/g, "");
+  switch (body?.action) {
+    case "name":
+      return changeName(body);
+    case "password":
+      return changePassword(body);
+    case "email-start":
+      return startEmailChange(body);
+    case "email-confirm":
+      return confirmEmailChange(body);
+    default:
+      return fail({ code: "UNKNOWN_ACTION", status: 400, message: "Unknown action." });
+  }
+}
 
-  if (body?.action !== "name" && body?.action !== "details") return fail({ code: "UNKNOWN_ACTION", status: 400, message: "Unknown action." });
+async function changeName(body: Record<string, unknown>) {
+  const firstName = String(body.firstName ?? "").trim();
+  const surname = String(body.surname ?? "").trim();
+  const phone = String(body.phone ?? "").replace(/[^\d+]/g, "");
   if (!NAME.test(firstName)) return field("firstName", "Use letters only, at least 2");
   if (!NAME.test(surname)) return field("surname", "Use letters only, at least 2");
   if (body.middleName && !NAME.test(String(body.middleName).trim())) return field("middleName", "Use letters only, at least 2");
@@ -31,10 +53,58 @@ export async function POST(request: Request) {
     body: { first_name: firstName, last_name: surname, phone },
     fallback: "We couldn't save your changes right now. Please try again.",
   });
-  if (!res.ok) {
-    const f = res.error.fields;
-    const mapped = f ? { ...(f.first_name ? { firstName: f.first_name } : {}), ...(f.last_name ? { surname: f.last_name } : {}), ...(f.phone ? { phone: f.phone } : {}) } : {};
-    return fail({ ...res.error, fields: Object.keys(mapped).length ? mapped : undefined });
+  return res.ok ? Response.json({ ok: true }) : fail(rename(res.error, { first_name: "firstName", last_name: "surname" }));
+}
+
+async function changePassword(body: Record<string, unknown>) {
+  const current = String(body.currentPassword ?? "");
+  const next = String(body.password ?? "");
+  if (!current) return field("currentPassword", "Enter your current password");
+  if (next.length < 8) return field("password", "Use at least 8 characters");
+  if (next === current) return field("password", "Choose a password you haven't used here before");
+
+  if (!isLive()) {
+    await mockDelay(900);
+    return Response.json({ ok: true });
   }
-  return Response.json({ ok: true });
+  const res = await upstream("/user/change-password", {
+    method: "POST",
+    body: { current_password: current, password: next, password_confirmation: next },
+    fallback: "We couldn't change your password right now. Please try again.",
+  });
+  return res.ok ? Response.json({ ok: true }) : fail(rename(res.error, { current_password: "currentPassword", password_confirmation: "password" }));
+}
+
+async function startEmailChange(body: Record<string, unknown>) {
+  const email = String(body.email ?? "").trim();
+  if (!EMAIL.test(email)) return field("email", "Enter a valid email address");
+
+  if (!isLive()) {
+    await mockDelay(800);
+    return Response.json({ ok: true });
+  }
+  const res = await upstream("/user/email/change", {
+    method: "POST",
+    body: { email },
+    fallback: "We couldn't start the email change right now. Please try again.",
+  });
+  return res.ok ? Response.json({ ok: true }) : fail(res.error);
+}
+
+async function confirmEmailChange(body: Record<string, unknown>) {
+  const email = String(body.email ?? "").trim();
+  const code = String(body.code ?? "").replace(/\D/g, "");
+  if (!EMAIL.test(email)) return field("email", "Enter a valid email address");
+  if (code.length !== 6) return field("code", "Enter the 6-digit code from your email");
+
+  if (!isLive()) {
+    await mockDelay(800);
+    return Response.json({ ok: true });
+  }
+  const res = await upstream("/user/email/change/confirm", {
+    method: "POST",
+    body: { email, token: code },
+    fallback: "That code didn't work. Check it and try again.",
+  });
+  return res.ok ? Response.json({ ok: true }) : fail(rename(res.error, { token: "code" }));
 }

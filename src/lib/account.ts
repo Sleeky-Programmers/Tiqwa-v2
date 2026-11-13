@@ -27,8 +27,6 @@ const EMPTY: UserProfile = {
   passportExpiry: "",
   passportCountry: "NG",
   memberSince: "",
-  tier: "Explorer",
-  points: 0,
 };
 /** Owned by the backend in live mode, so a stale local copy never overrides them. */
 const SERVER_KEYS = ["firstName", "surname", "email", "memberSince"] as const;
@@ -92,12 +90,20 @@ function subscribe(cb: () => void) {
 
 /** Current profile (empty until the session has loaded). */
 export function useProfile() {
-  return useSyncExternalStore(subscribe, () => profile, () => EMPTY);
+  return useSyncExternalStore(
+    subscribe,
+    () => profile,
+    () => EMPTY,
+  );
 }
 
 const LOADING: Session = { status: "loading", live: false };
 export function useSession() {
-  return useSyncExternalStore(subscribe, () => session, () => LOADING);
+  return useSyncExternalStore(
+    subscribe,
+    () => session,
+    () => LOADING,
+  );
 }
 
 export const getProfile = () => profile;
@@ -130,6 +136,5 @@ export async function signOut(to = "/") {
   window.location.assign(to);
 }
 
-export const fullName = (u: Pick<UserProfile, "firstName" | "middleName" | "surname">) =>
-  [u.firstName, u.middleName, u.surname].filter(Boolean).join(" ");
+export const fullName = (u: Pick<UserProfile, "firstName" | "middleName" | "surname">) => [u.firstName, u.middleName, u.surname].filter(Boolean).join(" ");
 export const initials = (u: Pick<UserProfile, "firstName" | "surname">) => `${u.firstName[0] ?? ""}${u.surname[0] ?? ""}`.toUpperCase();

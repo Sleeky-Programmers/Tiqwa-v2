@@ -10,15 +10,7 @@ import { airlineLogo } from "./FlightCard";
 export type AirlineSummary = { code: string; name: string; min: number; stops: number };
 
 /** "Airlines on this route" carousel: cheapest fare per airline; clicking a chip filters to it. */
-export function AirlineStrip({
-  airlines,
-  selected,
-  onSelect,
-}: {
-  airlines: AirlineSummary[];
-  selected: string[];
-  onSelect: (code: string) => void;
-}) {
+export function AirlineStrip({ airlines, selected, onSelect }: { airlines: AirlineSummary[]; selected: string[]; onSelect: (code: string) => void }) {
   const ref = useRef<HTMLDivElement>(null);
   const scroll = (dir: 1 | -1) => ref.current?.scrollBy({ left: dir * 360, behavior: "smooth" });
   const arrow =

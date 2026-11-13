@@ -60,10 +60,14 @@ export async function GET() {
         interestRate: Number(m.interest_rate) || 0,
       })),
     gateways: gateways.ok
-      ? (gateways.data ?? []).filter((g) => g.is_active !== false).map((g) => ({ id: g.service, name: g.service.charAt(0).toUpperCase() + g.service.slice(1), logo: g.logo }))
+      ? (gateways.data ?? [])
+          .filter((g) => g.is_active !== false)
+          .map((g) => ({ id: g.service, name: g.service.charAt(0).toUpperCase() + g.service.slice(1), logo: g.logo }))
       : [],
     banks: banks.ok
-      ? (banks.data ?? []).filter((b) => (b.status ?? 1) === 1).map((b) => ({ bank: b.bank_name, accountName: b.account_name, accountNumber: b.account_number }))
+      ? (banks.data ?? [])
+          .filter((b) => (b.status ?? 1) === 1)
+          .map((b) => ({ bank: b.bank_name, accountName: b.account_name, accountNumber: b.account_number }))
       : [],
   };
   return Response.json(body);

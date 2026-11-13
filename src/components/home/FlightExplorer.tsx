@@ -33,10 +33,7 @@ export function FlightExplorer() {
             aria-expanded={guideOpen}
             aria-controls="booking-guide"
             onClick={() => setGuideOpen((v) => !v)}
-            className={cn(
-              "mt-[23px] border-b-[0.83px] border-[#0057b8] text-sm font-semibold text-[#0057b8]",
-              guideOpen && "hidden",
-            )}
+            className={cn("mt-[23px] border-b-[0.83px] border-[#0057b8] text-sm font-semibold text-[#0057b8]", guideOpen && "hidden")}
           >
             About booking flights with TBILS
           </button>
@@ -46,7 +43,9 @@ export function FlightExplorer() {
               {bookingGuide.map((b, i) => (
                 <div key={i} className="space-y-3">
                   {b.h && <h3 className="pt-2 text-lg font-bold text-[#12233d]">{b.h}</h3>}
-                  {b.p?.map((t) => <p key={t}>{t}</p>)}
+                  {b.p?.map((t) => (
+                    <p key={t}>{t}</p>
+                  ))}
                   {b.list && (
                     <ul className="list-disc space-y-1 pl-6">
                       {b.list.map((t) => (
@@ -54,21 +53,23 @@ export function FlightExplorer() {
                       ))}
                     </ul>
                   )}
-                  {b.after?.map((t) => <p key={t}>{t}</p>)}
+                  {b.after?.map((t) => (
+                    <p key={t}>{t}</p>
+                  ))}
                 </div>
               ))}
-              <button
-                type="button"
-                onClick={() => setGuideOpen(false)}
-                className="border-b-[0.83px] border-[#0057b8] text-sm font-semibold text-[#0057b8]"
-              >
+              <button type="button" onClick={() => setGuideOpen(false)} className="border-b-[0.83px] border-[#0057b8] text-sm font-semibold text-[#0057b8]">
                 Hide booking guide
               </button>
             </div>
           )}
 
           <div className="mt-[26px] overflow-hidden rounded-2xl border-[0.83px] border-[#dce8f3] bg-white">
-            <div role="tablist" aria-label="Explore" className="no-scrollbar flex gap-1 overflow-x-auto border-b-[0.83px] border-[#e6edf5] bg-[#f3f8fd] p-[6px]">
+            <div
+              role="tablist"
+              aria-label="Explore"
+              className="no-scrollbar flex gap-1 overflow-x-auto border-b-[0.83px] border-[#e6edf5] bg-[#f3f8fd] p-[6px]"
+            >
               {tabs.map((t) => (
                 <button
                   key={t.id}

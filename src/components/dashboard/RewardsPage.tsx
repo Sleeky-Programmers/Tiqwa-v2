@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Banknote, Check, Copy, Gift, MessageCircle, Share2, UserPlus, Users } from "lucide-react";
 import { naira } from "@/lib/flights/format";
 import { cn } from "@/lib/utils";
+import { postJson } from "@/components/ui/form";
+import { toast } from "@/components/ui/Toast";
 import { EmptyState, SectionCard, StatCard, primaryBtn } from "./ui";
 import { useRewards } from "./useRewards";
 
@@ -11,7 +13,7 @@ const fmtDate = (d: string) => (d ? new Date(d).toLocaleDateString("en-GB", { da
 
 const steps = [
   { icon: Share2, title: "Share your code", body: "Send your referral code to friends and family who travel." },
-  { icon: UserPlus, title: "They book a flight", body: "They sign up and use your code on their first booking." },
+  { icon: UserPlus, title: "They book a flight", body: "They enter your code when they book." },
   { icon: Banknote, title: "You earn rewards", body: "Your reward lands here once their trip is paid for." },
 ];
 
@@ -19,14 +21,24 @@ const steps = [
 export function RewardsPage() {
   const { data, error, retry } = useRewards();
   const [copied, setCopied] = useState(false);
+  const [withdrawing, setWithdrawing] = useState(false);
   const paidOut = data?.payouts.reduce((s, p) => s + p.amount, 0) ?? 0;
-  const shareText = data?.code ? `Book flights from Nigeria and pay small small with TBiLS. Use my code ${data.code} when you sign up.` : "";
+  const shareText = data?.code ? `Book flights from Nigeria and pay small small with TBiLS. Use my code ${data.code} when you book.` : "";
 
   const copy = () => {
     if (!data?.code) return;
     navigator.clipboard?.writeText(data.code).catch(() => {});
     setCopied(true);
     window.setTimeout(() => setCopied(false), 1600);
+  };
+
+  const withdraw = async () => {
+    setWithdrawing(true);
+    const { errors } = await postJson("/api/rewards/withdraw", {});
+    setWithdrawing(false);
+    if (Object.keys(errors).length) return toast.error(errors.form ?? "We couldn't send your withdrawal request.");
+    toast.success("Withdrawal requested. We'll confirm once it's processed.");
+    retry();
   };
 
   if (error) {
@@ -95,9 +107,35 @@ export function RewardsPage() {
       <div className="grid gap-4 sm:grid-cols-3">
         {data ? (
           <>
-            <StatCard icon={Gift} tone="orange" label="Total earned" value={naira(data.total)} hint={data.canWithdraw ? "Available to withdraw" : "Earned from referrals"} />
-            <StatCard icon={Users} label="Friends referred" value={String(data.referrals.length)} hint="People who joined with your code" style={{ animationDelay: "60ms" }} />
-            <StatCard icon={Banknote} tone="green" label="Paid out" value={naira(paidOut)} hint={`${data.payouts.length} payout${data.payouts.length === 1 ? "" : "s"}`} style={{ animationDelay: "120ms" }} />
+            <StatCard
+              icon={Gift}
+              tone="orange"
+              label="Total earned"
+              value={naira(data.total)}
+              hint={data.canWithdraw ? "Available to withdraw" : "Earned from referrals"}
+              action={
+                data.canWithdraw && data.total > 0 ? (
+                  <button type="button" onClick={withdraw} disabled={withdrawing} className="link-underline text-xs font-bold text-blue disabled:opacity-50">
+                    {withdrawing ? "Sending…" : "Withdraw"}
+                  </button>
+                ) : undefined
+              }
+            />
+            <StatCard
+              icon={Users}
+              label="Friends referred"
+              value={String(data.referrals.length)}
+              hint="People who joined with your code"
+              style={{ animationDelay: "60ms" }}
+            />
+            <StatCard
+              icon={Banknote}
+              tone="green"
+              label="Paid out"
+              value={naira(paidOut)}
+              hint={`${data.payouts.length} payout${data.payouts.length === 1 ? "" : "s"}`}
+              style={{ animationDelay: "120ms" }}
+            />
           </>
         ) : (
           Array.from({ length: 3 }, (_, i) => <div key={i} className="skeleton h-[104px] rounded-2xl" />)

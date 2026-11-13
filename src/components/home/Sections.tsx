@@ -30,16 +30,13 @@ export function ServicesBand() {
     <section aria-labelledby="services-title" className="bg-navy-900 py-16 text-white">
       <Container>
         <div data-reveal>
-        <p className="text-xs font-bold uppercase leading-[18px] tracking-[0.08em] text-[#70c4ff]">Beyond your booking</p>
-        <h2
-          id="services-title"
-          className="mt-2 max-w-[690px] font-display text-[28px] font-extrabold leading-[1.08] tracking-[-0.035em] md:text-[36px]"
-        >
-          Flight booking, visa &amp; travel services for Nigerians
-        </h2>
-        <p className="mt-[10px] max-w-[540px] text-sm leading-[1.55] text-[#b9c6d8]">
-          Practical support for every stage of your journey and your next big move.
-        </p>
+          <p className="text-xs font-bold uppercase leading-[18px] tracking-[0.08em] text-[#70c4ff]">Beyond your booking</p>
+          <h2 id="services-title" className="mt-2 max-w-[690px] font-display text-[28px] font-extrabold leading-[1.08] tracking-[-0.035em] md:text-[36px]">
+            Flight booking, visa &amp; travel services for Nigerians
+          </h2>
+          <p className="mt-[10px] max-w-[540px] text-sm leading-[1.55] text-[#b9c6d8]">
+            Practical support for every stage of your journey and your next big move.
+          </p>
         </div>
         <div data-reveal-stagger className="mt-[30px] grid grid-cols-1 gap-[18px] sm:grid-cols-2 lg:grid-cols-3">
           {services.map((s, i) => {
@@ -74,8 +71,11 @@ export function ServicesBand() {
   );
 }
 
-export function PartnersStrip() {
-  const row = [...partners, ...partners, ...partners];
+type Logo = { name: string; alt: string; src: string; w: number; h: number; remote?: boolean };
+
+export function PartnersStrip({ partners: live }: { partners?: { name: string; src: string }[] | null }) {
+  const list: Logo[] = live?.length ? live.map((p) => ({ name: p.name, alt: p.name, src: p.src, w: 120, h: 40, remote: true })) : partners;
+  const row = [...list, ...list, ...list];
   return (
     <section aria-labelledby="partners-title" className="overflow-hidden bg-white pb-[52px] pt-12">
       <Container className="text-center" data-reveal>
@@ -87,8 +87,16 @@ export function PartnersStrip() {
       <div className="relative mt-[29px] [mask-image:linear-gradient(90deg,transparent,#000_8%,#000_92%,transparent)]">
         <ul className="flex w-max animate-[marquee_30s_linear_infinite] items-center gap-16 hover:[animation-play-state:paused]">
           {[...row, ...row].map((p, i) => (
-            <li key={i} aria-hidden={i >= partners.length || undefined}>
-              <Image src={p.src} alt={i < partners.length ? p.alt : ""} width={p.w} height={p.h} className="h-auto w-auto object-contain" style={{ height: p.h, width: "auto" }} />
+            <li key={i} aria-hidden={i >= list.length || undefined}>
+              <Image
+                src={p.src}
+                alt={i < list.length ? p.alt : ""}
+                width={p.w}
+                height={p.h}
+                unoptimized={p.remote}
+                className="h-auto w-auto object-contain"
+                style={{ height: p.h, width: "auto" }}
+              />
             </li>
           ))}
         </ul>
@@ -138,7 +146,10 @@ export function WhyTbils() {
           </h2>
           <p className="mt-[10px] text-sm leading-[1.55] text-[#617087]">Everything you need for a smoother journey, from search to take-off.</p>
         </div>
-        <div data-reveal-stagger className="mt-[25px] grid grid-cols-1 gap-y-5 rounded-[20px] border-[0.83px] border-[#e1e8f1] bg-white px-[19px] py-[22px] shadow-[0_16px_38px_rgba(21,51,87,0.06)] sm:grid-cols-2 lg:grid-cols-4">
+        <div
+          data-reveal-stagger
+          className="mt-[25px] grid grid-cols-1 gap-y-5 rounded-[20px] border-[0.83px] border-[#e1e8f1] bg-white px-[19px] py-[22px] shadow-[0_16px_38px_rgba(21,51,87,0.06)] sm:grid-cols-2 lg:grid-cols-4"
+        >
           {whyTbils.map((w) => (
             <div key={w.title} className="group flex items-start gap-3 lg:pr-[37px]">
               <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#eaf4ff] text-[#087dcc]">

@@ -23,14 +23,6 @@ export const services = [
     icon: "landmark",
     accent: "orange",
   },
-  {
-    title: "Properties",
-    body: "Browse verified homes, list your property, and connect with trustworthy buyers or renters quickly.",
-    href: "https://www.tbilprop.com/",
-    image: "/images/services/properties.jpg",
-    icon: "building",
-    accent: "blue",
-  },
 ] as const;
 
 export const partners = [

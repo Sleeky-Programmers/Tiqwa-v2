@@ -44,7 +44,10 @@ export function ItineraryBand({
         embedded ? "rounded-2xl pt-5" : "overflow-hidden pt-[100px] max-md:pt-[80px]",
       )}
     >
-      <div aria-hidden className="pointer-events-none absolute right-0 top-0 h-full w-[480px] max-w-full overflow-hidden rounded-2xl bg-[radial-gradient(circle_at_85%_20%,rgba(2,144,222,0.28)_0,transparent_60%)]" />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute right-0 top-0 h-full w-[480px] max-w-full overflow-hidden rounded-2xl bg-[radial-gradient(circle_at_85%_20%,rgba(2,144,222,0.28)_0,transparent_60%)]"
+      />
       {!embedded && <Header />}
       <div className="relative mx-auto max-w-[1440px]">
         {before}

@@ -39,7 +39,9 @@ export async function GET(request: NextRequest) {
     return fail(res.error);
   }
   const d = res.data ?? {};
-  const offer = d.outbound?.length ? mapFlightItem({ ...d, id, amount: Number(d.amount) || 0, outbound: d.outbound } as Parameters<typeof mapFlightItem>[0], cabin) ?? undefined : undefined;
+  const offer = d.outbound?.length
+    ? (mapFlightItem({ ...d, id, amount: Number(d.amount) || 0, outbound: d.outbound } as Parameters<typeof mapFlightItem>[0], cabin) ?? undefined)
+    : undefined;
   const body: ConfirmPrice = {
     offer: offer ? { ...offer, seatsLeft: d.bookable_seats || undefined } : undefined,
     total: Number(d.amount) || d.pricing?.payable || undefined,

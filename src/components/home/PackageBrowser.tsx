@@ -68,7 +68,11 @@ export function PackageBrowser({ packages }: { packages: HolidayPackage[] }) {
       </div>
 
       {places.length > 1 && (
-        <div role="group" aria-label="Destination" className="animate-[fade-up_0.5s_cubic-bezier(0.16,1,0.3,1)_backwards] motion-reduce:animate-none [animation-delay:80ms] no-scrollbar -mx-1 mb-6 flex gap-2 overflow-x-auto px-1 pb-1">
+        <div
+          role="group"
+          aria-label="Destination"
+          className="animate-[fade-up_0.5s_cubic-bezier(0.16,1,0.3,1)_backwards] motion-reduce:animate-none [animation-delay:80ms] no-scrollbar -mx-1 mb-6 flex gap-2 overflow-x-auto px-1 pb-1"
+        >
           <button type="button" aria-pressed={!place} onClick={() => setPlace("")} className={chip(!place)}>
             All destinations
           </button>
@@ -89,7 +93,11 @@ export function PackageBrowser({ packages }: { packages: HolidayPackage[] }) {
         // Keyed on the filters so a change replays the cascade instead of popping in.
         <div key={`${place}|${term}|${sort}`} className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {shown.map((p, i) => (
-            <div key={p.id} className="animate-[fade-up_0.45s_cubic-bezier(0.16,1,0.3,1)_backwards] motion-reduce:animate-none" style={{ animationDelay: `${Math.min(i, 8) * 60}ms` }}>
+            <div
+              key={p.id}
+              className="animate-[fade-up_0.45s_cubic-bezier(0.16,1,0.3,1)_backwards] motion-reduce:animate-none"
+              style={{ animationDelay: `${Math.min(i, 8) * 60}ms` }}
+            >
               <PackageCard p={p} eager={i < 3} />
             </div>
           ))}

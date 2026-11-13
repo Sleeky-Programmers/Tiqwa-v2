@@ -164,3 +164,29 @@ export function withLock<T>(key: string, fn: () => Promise<T>, { share = "", ttl
     }
   });
 }
+
+/** Best-effort caller identity for rate limits: the first forwarded address, else a shared "local" bucket. */
+export const clientKey = (request: Request) => request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || request.headers.get("x-real-ip") || "local";
+
+/**
+ * Runs a form-style submission (message, enquiry, reservation request) at most once per `key`.
+ * `fn` returns an error to report, or null on success. A repeat of a finished submission, or one that
+ * arrives while the first is still running, is answered as a success without a second call upstream.
+ */
+export async function submitOnce<E>(key: string, fn: () => Promise<E | null>, ttlSec = 10 * 60): Promise<E | null> {
+  try {
+    return await withLock(
+      key,
+      async () => {
+        if (await recall<boolean>(key)) return null;
+        const error = await fn();
+        if (!error) await remember(key, true, ttlSec);
+        return error;
+      },
+      { waitMs: 20_000 },
+    );
+  } catch (e) {
+    if (e instanceof LockBusyError) return null;
+    throw e;
+  }
+}

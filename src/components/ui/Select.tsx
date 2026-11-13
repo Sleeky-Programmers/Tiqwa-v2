@@ -42,7 +42,12 @@ export function Select({
   const triggerRef = useRef<HTMLButtonElement>(null);
 
   const openMenu = () => {
-    setActive(Math.max(0, items.findIndex((o) => o.value === value)));
+    setActive(
+      Math.max(
+        0,
+        items.findIndex((o) => o.value === value),
+      ),
+    );
     setOpen(true);
   };
   const pick = (v: string) => {
@@ -84,43 +89,50 @@ export function Select({
       {name && <input type="hidden" name={name} value={value} />}
       {open && (
         <Floating anchorRef={triggerRef} floatingRef={menuRef}>
-        <ul
-          id={`${id}-list`}
-          role="listbox"
-          aria-label={label}
-          className="max-h-[min(360px,60vh)] space-y-1 overflow-y-auto rounded-xl border border-[#e2e8f0] bg-white p-3 shadow-[0_18px_45px_rgba(15,23,42,0.16)]"
-        >
-          {items.map((o, i) => {
-            const selected = o.value === value;
-            return (
-              <li
-                key={o.value}
-                id={`${id}-opt-${i}`}
-                role="option"
-                aria-selected={selected}
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  pick(o.value);
-                }}
-                onMouseEnter={() => setActive(i)}
-                className={cn(
-                  "flex cursor-pointer items-center justify-between gap-2 rounded-[10px] px-[14px] py-3 transition-colors",
-                  (selected || i === active) && "bg-[#f1f5f9]",
-                )}
-              >
-                <span className="min-w-0">
-                  <span className={cn("block text-[15px] leading-5", selected ? "font-bold text-blue" : "font-medium text-[#334155]")}>{o.label}</span>
-                  {o.description && <span className="mt-1.5 block text-[13px] leading-4 text-[#64748b]">{o.description}</span>}
-                </span>
-                {selected && (
-                  <svg viewBox="0 0 16 16" aria-hidden className="size-4 shrink-0 fill-none stroke-blue" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M3.5 8.5l3 3 6-7" />
-                  </svg>
-                )}
-              </li>
-            );
-          })}
-        </ul>
+          <ul
+            id={`${id}-list`}
+            role="listbox"
+            aria-label={label}
+            className="max-h-[min(360px,60vh)] space-y-1 overflow-y-auto rounded-xl border border-[#e2e8f0] bg-white p-3 shadow-[0_18px_45px_rgba(15,23,42,0.16)]"
+          >
+            {items.map((o, i) => {
+              const selected = o.value === value;
+              return (
+                <li
+                  key={o.value}
+                  id={`${id}-opt-${i}`}
+                  role="option"
+                  aria-selected={selected}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    pick(o.value);
+                  }}
+                  onMouseEnter={() => setActive(i)}
+                  className={cn(
+                    "flex cursor-pointer items-center justify-between gap-2 rounded-[10px] px-[14px] py-3 transition-colors",
+                    (selected || i === active) && "bg-[#f1f5f9]",
+                  )}
+                >
+                  <span className="min-w-0">
+                    <span className={cn("block text-[15px] leading-5", selected ? "font-bold text-blue" : "font-medium text-[#334155]")}>{o.label}</span>
+                    {o.description && <span className="mt-1.5 block text-[13px] leading-4 text-[#64748b]">{o.description}</span>}
+                  </span>
+                  {selected && (
+                    <svg
+                      viewBox="0 0 16 16"
+                      aria-hidden
+                      className="size-4 shrink-0 fill-none stroke-blue"
+                      strokeWidth="2.2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M3.5 8.5l3 3 6-7" />
+                    </svg>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
         </Floating>
       )}
     </div>

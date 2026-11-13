@@ -106,14 +106,18 @@ export function DashboardHome() {
         <div className="relative max-w-[620px]">
           <p className="text-sm font-semibold text-[#8fd0ff]">{hour === null ? "Welcome back" : greeting(hour)},</p>
           <h2 className="mt-1 font-display text-[28px] font-extrabold leading-tight sm:text-[32px]">{user.firstName || "Traveller"}, where to next?</h2>
-          <p className="mt-2 text-sm text-white/80">
-            Compare fares from hundreds of airlines and spread the cost with Pay Small Small on eligible bookings.
-          </p>
+          <p className="mt-2 text-sm text-white/80">Compare fares from hundreds of airlines and spread the cost with Pay Small Small on eligible bookings.</p>
           <div className="mt-5 flex flex-wrap gap-3">
-            <Link href="/dashboard/flights" className="inline-flex items-center gap-2 rounded-xl bg-orange px-5 py-3 text-sm font-bold text-white shadow-[0_6px_16px_rgba(245,134,52,0.35)] transition hover:bg-orange-600">
+            <Link
+              href="/dashboard/flights"
+              className="inline-flex items-center gap-2 rounded-xl bg-orange px-5 py-3 text-sm font-bold text-white shadow-[0_6px_16px_rgba(245,134,52,0.35)] transition hover:bg-orange-600"
+            >
               <Search className="size-4" /> Search flights
             </Link>
-            <Link href="/dashboard/bookings" className="inline-flex items-center gap-2 rounded-xl border border-white/30 px-5 py-3 text-sm font-bold text-white transition hover:bg-white/10">
+            <Link
+              href="/dashboard/bookings"
+              className="inline-flex items-center gap-2 rounded-xl border border-white/30 px-5 py-3 text-sm font-bold text-white transition hover:bg-white/10"
+            >
               My bookings <ArrowRight className="size-4" />
             </Link>
           </div>
@@ -121,7 +125,10 @@ export function DashboardHome() {
       </section>
 
       {error && (
-        <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#fecaca] bg-[#fef2f2] px-5 py-4 text-sm text-[#b91c1c] animate-[acc-reveal_0.3s_ease]">
+        <div
+          role="alert"
+          className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#fecaca] bg-[#fef2f2] px-5 py-4 text-sm text-[#b91c1c] animate-[acc-reveal_0.3s_ease]"
+        >
           <span>{error}</span>
           <button type="button" onClick={refresh} className="press rounded-lg border border-[#fca5a5] bg-white px-3 py-1.5 font-bold">
             Try again
@@ -132,10 +139,36 @@ export function DashboardHome() {
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {m ? (
           <>
-            <StatCard icon={CalendarCheck} label="Upcoming trips" value={String(m.upcoming.length)} hint={m.next ? `Next: ${fmtLongDate(firstDeparture(m.next))}` : "Nothing booked yet"} />
-            <StatCard icon={Plane} tone="navy" label="Trips taken" value={String(m.tripsTaken)} hint={`${m.countries} countries visited`} style={{ animationDelay: "60ms" }} />
-            <StatCard icon={Wallet} tone="orange" label={`Spent in ${new Date().getFullYear()}`} value={naira(m.spentThisYear)} hint="Paid bookings only" style={{ animationDelay: "120ms" }} />
-            <StatCard icon={Route} tone="green" label="Distance flown" value={`${m.km.toLocaleString("en-NG")} km`} hint={`≈ ${(m.km / 40075).toFixed(1)}× around the world`} style={{ animationDelay: "180ms" }} />
+            <StatCard
+              icon={CalendarCheck}
+              label="Upcoming trips"
+              value={String(m.upcoming.length)}
+              hint={m.next ? `Next: ${fmtLongDate(firstDeparture(m.next))}` : "Nothing booked yet"}
+            />
+            <StatCard
+              icon={Plane}
+              tone="navy"
+              label="Trips taken"
+              value={String(m.tripsTaken)}
+              hint={`${m.countries} countries visited`}
+              style={{ animationDelay: "60ms" }}
+            />
+            <StatCard
+              icon={Wallet}
+              tone="orange"
+              label={`Spent in ${new Date().getFullYear()}`}
+              value={naira(m.spentThisYear)}
+              hint="Paid bookings only"
+              style={{ animationDelay: "120ms" }}
+            />
+            <StatCard
+              icon={Route}
+              tone="green"
+              label="Distance flown"
+              value={`${m.km.toLocaleString("en-NG")} km`}
+              hint={`≈ ${(m.km / 40075).toFixed(1)}× around the world`}
+              style={{ animationDelay: "180ms" }}
+            />
           </>
         ) : (
           metricsSkeleton
@@ -189,7 +222,8 @@ export function DashboardHome() {
                       </p>
                       <p className="text-xs text-ink-500">
                         {statusLabel[b.status]} · {naira(b.live ? b.payment.amount : bookingTotals(b).total)}
-                        {b.status === "hold" && ` · pay before ${new Date(b.reservation.expiresAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}`}
+                        {b.status === "hold" &&
+                          ` · pay before ${new Date(b.reservation.expiresAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}`}
                       </p>
                     </div>
                     <ArrowRight className="mt-0.5 size-4 shrink-0 text-ink-400" />
@@ -228,7 +262,7 @@ export function DashboardHome() {
           title="Deals for you"
           description="Handpicked fares from Nigeria this week"
           action={
-            <Link href="/dashboard/flights" className={outlineBtn + " px-4 py-2"}>
+            <Link href="/dashboard/flights" className={`${outlineBtn} px-4 py-2`}>
               Search all
             </Link>
           }

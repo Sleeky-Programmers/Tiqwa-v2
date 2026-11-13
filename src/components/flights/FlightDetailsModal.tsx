@@ -14,13 +14,14 @@ function JourneyItinerary({ journey, label, baggage }: { journey: Journey; label
     <section className="mb-7 last:mb-0">
       <div className="flex flex-wrap items-center justify-between gap-3 px-2.5">
         <p className="text-base font-semibold text-[#111827]">
-          {label}: <span className="font-medium">{journey.from.city} - {journey.to.city}</span>
+          {label}:{" "}
+          <span className="font-medium">
+            {journey.from.city} - {journey.to.city}
+          </span>
         </p>
         <div className="flex items-center gap-3">
           <Image src={airlineLogo(first.airline.code)} alt="" width={32} height={32} className="size-8 rounded object-contain" />
-          <span className="rounded bg-[#f3f4f6] px-2 py-1 text-xs text-ink-500">
-            Flight {journey.segments.map((s) => s.flightNumber).join(" / ")}
-          </span>
+          <span className="rounded bg-[#f3f4f6] px-2 py-1 text-xs text-ink-500">Flight {journey.segments.map((s) => s.flightNumber).join(" / ")}</span>
         </div>
       </div>
       <h4 className="mt-3 border-b-2 border-[#0290de]/80 pb-2 text-base font-semibold text-[#013557]">Flight Segments</h4>
@@ -52,8 +53,7 @@ function JourneyItinerary({ journey, label, baggage }: { journey: Journey; label
             {s.layoverMin !== undefined && i < journey.segments.length - 1 && (
               <p className="mt-3 flex flex-wrap items-center gap-2 rounded-md bg-[#fff7ed] px-4 py-2.5 text-[13px] text-[#9a3412]">
                 <span aria-hidden>⏱</span>
-                <span className="font-semibold">Layover:</span> {s.to.name} ({s.to.city})
-                <span className="font-bold">{fmtDuration(s.layoverMin)}</span>
+                <span className="font-semibold">Layover:</span> {s.to.name} ({s.to.city})<span className="font-bold">{fmtDuration(s.layoverMin)}</span>
               </p>
             )}
           </div>
@@ -69,15 +69,7 @@ const ruleRow = "grid grid-cols-[120px_1fr] gap-3 border-b border-[#eef1f5] px-4
  * "View Details" for a flight, as a modal (tbils.com expands this inline under the card).
  * Tabs: Itinerary / Fare Rules, with the fare summary and Book button alongside.
  */
-export function FlightDetailsModal({
-  offer,
-  onClose,
-  onBook,
-}: {
-  offer: FlightOffer | null;
-  onClose: () => void;
-  onBook: (offer: FlightOffer) => void;
-}) {
+export function FlightDetailsModal({ offer, onClose, onBook }: { offer: FlightOffer | null; onClose: () => void; onBook: (offer: FlightOffer) => void }) {
   const [tab, setTab] = useState<"itinerary" | "fareRules">("itinerary");
   const close = () => {
     setTab("itinerary");
@@ -86,7 +78,9 @@ export function FlightDetailsModal({
   if (!offer) return null;
 
   const isReturn = offer.journeys.length === 2 && offer.journeys[1].to.code === offer.journeys[0].from.code;
-  const labels = isReturn ? ["Outbound Flight", "Return Flight"] : offer.journeys.map((_, i) => (offer.journeys.length > 1 ? `Flight ${i + 1}` : "Outbound Flight"));
+  const labels = isReturn
+    ? ["Outbound Flight", "Return Flight"]
+    : offer.journeys.map((_, i) => (offer.journeys.length > 1 ? `Flight ${i + 1}` : "Outbound Flight"));
   const { price } = offer;
   const paxRows = [
     { label: "Adult", ...price.adults },
@@ -193,9 +187,7 @@ export function FlightDetailsModal({
               <span>TOTAL</span>
               <span>{naira(price.total)}</span>
             </div>
-            <p className="mt-5 text-xs leading-[1.6] text-ink-400">
-              *Total fare displayed above has been rounded off and may thus show a slight difference.
-            </p>
+            <p className="mt-5 text-xs leading-[1.6] text-ink-400">*Total fare displayed above has been rounded off and may thus show a slight difference.</p>
           </div>
           <div className="px-4 pb-5">
             <button

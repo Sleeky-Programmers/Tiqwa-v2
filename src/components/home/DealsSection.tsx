@@ -10,20 +10,16 @@ const glassPill = "rounded-full border-[0.83px] border-[rgba(143,208,255,0.5)] b
 
 function DealCard({ deal, featured }: { deal: Deal; featured?: boolean }) {
   const oneWay = deal.trip === "One way";
-  const dates = deal.depart ? `&depart=${deal.depart}${!oneWay && deal.returnDate ? `&return=${deal.returnDate}` : ""}&adults=1&children=0&infants=0&cabin=economy` : "";
+  const dates = deal.depart
+    ? `&depart=${deal.depart}${!oneWay && deal.returnDate ? `&return=${deal.returnDate}` : ""}&adults=1&children=0&infants=0&cabin=economy`
+    : "";
   const href = `/flights?from=${deal.fromCode}&to=${deal.toCode}&trip=${oneWay ? "oneway" : "round"}${dates}`;
   const card = (
     <Link
       href={href}
       className="hover-lift hover-zoom group relative block h-[294px] w-[235px] shrink-0 snap-start overflow-hidden rounded-[18px] bg-[#0a1626] shadow-card"
     >
-      <Image
-        src={deal.image}
-        alt={`Cheap flights ${deal.from} → ${deal.to}`}
-        fill
-        sizes="235px"
-        className="object-cover"
-      />
+      <Image src={deal.image} alt={`Cheap flights ${deal.from} → ${deal.to}`} fill sizes="235px" className="object-cover" />
       <div className="absolute inset-0 bg-[linear-gradient(rgba(4,14,28,0.55)_0px,rgba(4,14,28,0.15)_32%,rgba(4,14,28,0.35)_58%,rgba(3,12,24,0.92))]" />
 
       <span className={`absolute left-[14px] top-[14px] px-[10px] py-[5px] text-[10px] font-bold uppercase leading-[15px] tracking-[0.08em] ${glassPill}`}>

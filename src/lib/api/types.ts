@@ -98,7 +98,16 @@ export type WlAirport = { id?: number; iata_code: string; city: string; name: st
 export type WlPopularAirport = { city: string; country: string; iata_code?: string; name?: string; image?: string };
 
 export type WlAddon = { id: number; name: string; price: number; passengers?: number; status?: number; for?: string; description?: string | null };
-export type WlPaymentMethod = { id: number; title: string; identifier: string; description?: string; priority?: number; status?: number; interest_rate?: number; instalments?: string | null };
+export type WlPaymentMethod = {
+  id: number;
+  title: string;
+  identifier: string;
+  description?: string;
+  priority?: number;
+  status?: number;
+  interest_rate?: number;
+  instalments?: string | null;
+};
 export type WlPaymentGateway = { service: string; logo?: string; is_active?: boolean };
 export type WlBankAccount = { bank_name: string; account_name: string; account_number: string; status?: number };
 

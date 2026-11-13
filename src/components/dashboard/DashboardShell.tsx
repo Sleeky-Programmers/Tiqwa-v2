@@ -18,7 +18,8 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 
   // An expired backend token signs the user out; send them to sign in and back here afterwards.
   useEffect(() => {
-    if (session.live && session.status === "signedOut") router.replace(`/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`);
+    if (session.live && session.status === "signedOut")
+      router.replace(`/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`);
   }, [session, router]);
 
   // Close the mobile drawer after navigating.

@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { CircleCheck, CircleX, Plane } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
-import { contact } from "@/data/contact";
+import { useContact } from "@/components/layout/ContactProvider";
 import { bookingRoutes, type BookingVariant } from "@/lib/booking/routes";
 import { loadBooking, saveBooking, type BookingDraft } from "@/lib/booking/store";
 import { cn } from "@/lib/utils";
@@ -33,6 +33,7 @@ function verify(url: string, attempt: number): Promise<Verified> {
  * confirmation page of whichever flow (site or dashboard) started the payment.
  */
 export function VerifyPayment() {
+  const contact = useContact();
   const router = useRouter();
   const params = useSearchParams();
   const [state, setState] = useState<State>({ phase: "checking" });
@@ -54,8 +55,10 @@ export function VerifyPayment() {
     const routes = bookingRoutes(ret?.variant ?? "site");
 
     (async () => {
-      if (sp.get("status") === "cancelled") return setState({ phase: "failed", message: "You cancelled the payment. Your seat is still reserved until the payment deadline." });
-      if (!reference) return setState({ phase: "failed", message: "We couldn't find a payment to check. If you were charged, contact us with your booking reference." });
+      if (sp.get("status") === "cancelled")
+        return setState({ phase: "failed", message: "You cancelled the payment. Your seat is still reserved until the payment deadline." });
+      if (!reference)
+        return setState({ phase: "failed", message: "We couldn't find a payment to check. If you were charged, contact us with your booking reference." });
       try {
         // Forward everything the gateway sent back: Flutterwave is only verified with its transaction_id.
         const qs = new URLSearchParams(sp);
@@ -64,7 +67,10 @@ export function VerifyPayment() {
         if (cancelled) return;
         if (!ok || !json) throw new Error(json?.error?.message);
         if (!json.paid) {
-          return setState({ phase: "failed", message: "Your payment wasn't completed. No booking has been issued yet. You can try again before the payment deadline." });
+          return setState({
+            phase: "failed",
+            message: "Your payment wasn't completed. No booking has been issued yet. You can try again before the payment deadline.",
+          });
         }
         const booking = json.booking ?? null;
         // The saved checkout draft is richer (add-ons, labels), but only when it is this booking.
@@ -75,7 +81,10 @@ export function VerifyPayment() {
           saveBooking({
             ...base,
             live: true,
-            reservation: base.reservation && booking?.reservation ? { ...base.reservation, airlinePnr: booking.reservation.airlinePnr || base.reservation.airlinePnr } : base.reservation ?? booking?.reservation,
+            reservation:
+              base.reservation && booking?.reservation
+                ? { ...base.reservation, airlinePnr: booking.reservation.airlinePnr || base.reservation.airlinePnr }
+                : (base.reservation ?? booking?.reservation),
             payment: {
               method: base.payment?.method ?? "card",
               methodLabel: base.payment?.methodLabel,
@@ -92,7 +101,14 @@ export function VerifyPayment() {
         setState({ phase: "paid" });
         window.setTimeout(() => router.replace(`${routes.success}?payment_method=card`), 1400);
       } catch (e) {
-        if (!cancelled) setState({ phase: "failed", message: e instanceof Error && e.message ? e.message : "We couldn't confirm your payment yet. If you were charged, contact us with your booking reference." });
+        if (!cancelled)
+          setState({
+            phase: "failed",
+            message:
+              e instanceof Error && e.message
+                ? e.message
+                : "We couldn't confirm your payment yet. If you were charged, contact us with your booking reference.",
+          });
       }
     })();
     return () => {
@@ -109,7 +125,11 @@ export function VerifyPayment() {
         <span
           className={cn(
             "mx-auto mb-5 grid size-16 place-items-center rounded-full",
-            state.phase === "failed" ? "bg-[#fef2f2] text-error" : state.phase === "paid" ? "bg-[#dcfce7] text-[#16a34a]" : "glow-ring bg-[rgba(2,144,222,0.1)] text-blue",
+            state.phase === "failed"
+              ? "bg-[#fef2f2] text-error"
+              : state.phase === "paid"
+                ? "bg-[#dcfce7] text-[#16a34a]"
+                : "glow-ring bg-[rgba(2,144,222,0.1)] text-blue",
           )}
         >
           {state.phase === "failed" ? (
@@ -153,10 +173,19 @@ export function VerifyPayment() {
               Back to my booking
             </Link>
             <p className="mt-2 text-xs text-ink-500">
-              Need help? WhatsApp{" "}
-              <a href={contact.whatsapp.href} className="font-semibold text-ink-900">
-                {contact.whatsapp.display}
-              </a>{" "}
+              Need help?{" "}
+              {contact.whatsapp ? (
+                <>
+                  WhatsApp{" "}
+                  <a href={contact.whatsapp.href} className="font-semibold text-ink-900">
+                    {contact.whatsapp.display}
+                  </a>{" "}
+                </>
+              ) : (
+                <a href={contact.phone.href} className="font-semibold text-ink-900">
+                  {contact.phone.display}
+                </a>
+              )}{" "}
               {back?.reference ? <>and quote {back.reference}</> : null}
             </p>
           </div>

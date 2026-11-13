@@ -3,19 +3,19 @@ import { Suspense } from "react";
 import { Clock, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import { ContactForm } from "@/components/layout/ContactForm";
 import { PageShell } from "@/components/layout/PageShell";
-import { contact } from "@/data/contact";
+import { getContact } from "@/lib/api/site";
 
 export const metadata: Metadata = { title: "Contact us" };
 
-const rows = [
-  { icon: Phone, label: "Call us", value: contact.phone.display, href: contact.phone.href },
-  { icon: MessageCircle, label: "WhatsApp", value: contact.whatsapp.display, href: contact.whatsapp.href },
-  { icon: Mail, label: "Email", value: contact.email.display, href: contact.email.href },
-  { icon: MapPin, label: "Office", value: contact.address.display },
-  { icon: Clock, label: "Support hours", value: contact.hours },
-];
-
-export default function Page() {
+export default async function Page() {
+  const contact = await getContact();
+  const rows = [
+    { icon: Phone, label: "Call us", value: contact.phone.display, href: contact.phone.href },
+    ...(contact.whatsapp ? [{ icon: MessageCircle, label: "WhatsApp", value: contact.whatsapp.display, href: contact.whatsapp.href }] : []),
+    { icon: Mail, label: "Email", value: contact.email.display, href: contact.email.href },
+    { icon: MapPin, label: "Office", value: contact.address.display, href: undefined },
+    { icon: Clock, label: "Support hours", value: contact.hours, href: undefined },
+  ];
   return (
     <PageShell title="Contact us" intro="Flights, visas, payment plans and booking changes — we're here to help.">
       <div className="grid items-start gap-8 lg:grid-cols-[1fr_380px]">

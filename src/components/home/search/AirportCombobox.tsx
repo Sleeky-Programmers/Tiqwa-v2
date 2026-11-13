@@ -183,9 +183,7 @@ export function AirportCombobox({
           </div>
           <ul ref={listRef} id={listId} role="listbox" aria-label={`${title} airports`} className="flex flex-col gap-[2px] px-2 pb-4 pt-2">
             {status === "error" && <li className="px-2 py-2 text-sm text-error">Couldn&apos;t load airports. Try again.</li>}
-            {status !== "error" && results.length === 0 && status !== "loading" && (
-              <li className="px-2 py-2 text-sm text-[#666]">No locations found</li>
-            )}
+            {status !== "error" && results.length === 0 && status !== "loading" && <li className="px-2 py-2 text-sm text-[#666]">No locations found</li>}
             {results.map((a, i) => (
               <li
                 key={a.code}

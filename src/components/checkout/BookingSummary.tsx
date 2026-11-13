@@ -55,7 +55,10 @@ export function BookingSummary({
   ].filter((r) => r.count > 0);
 
   return (
-    <div data-reveal="right" className="overflow-hidden rounded-[14px] border border-[#eef1f5] bg-white shadow-[0_1px_2px_rgba(16,40,68,0.04),0_8px_24px_rgba(16,40,68,0.05)]">
+    <div
+      data-reveal="right"
+      className="overflow-hidden rounded-[14px] border border-[#eef1f5] bg-white shadow-[0_1px_2px_rgba(16,40,68,0.04),0_8px_24px_rgba(16,40,68,0.05)]"
+    >
       <h3 className="border-b border-[#eef1f5] px-[18px] py-4 text-lg font-bold text-ink-900">Booking Summary</h3>
 
       <div className={section}>
@@ -128,7 +131,7 @@ export function BookingSummary({
 
       <div className={section}>
         <label htmlFor="promoCode" className="text-[15px] font-medium text-[#1d1d1d]">
-          Enter Promo Code
+          Promo or referral code
         </label>
         <div className="mt-2.5 flex gap-2.5">
           <input
@@ -140,7 +143,7 @@ export function BookingSummary({
               if (draft.promo) onPromo(undefined);
               setStatus("idle");
             }}
-            placeholder="Enter promo code"
+            placeholder="Enter promo or referral code"
             className="h-[45px] min-w-0 flex-1 rounded-md border border-[#e5e7eb] px-4 text-[15px] uppercase placeholder:normal-case focus:border-blue focus:outline-none disabled:bg-tint-100"
           />
           <button
@@ -171,7 +174,9 @@ export function BookingSummary({
       </div>
 
       <div className="m-[18px] flex items-center gap-2.5 rounded-lg bg-[#fff7ef] px-4 py-3">
-        <span aria-hidden className="text-[17px] text-orange">⚠</span>
+        <span aria-hidden className="text-[17px] text-orange">
+          ⚠
+        </span>
         <p className="text-[13px] font-medium leading-[1.45] text-[#8a4a17]">This price may increase if you book later.</p>
       </div>
     </div>

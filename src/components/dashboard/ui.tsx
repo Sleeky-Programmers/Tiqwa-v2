@@ -43,6 +43,7 @@ export function StatCard({
   icon: Icon,
   tone = "blue",
   style,
+  action,
 }: {
   label: string;
   value: string;
@@ -50,6 +51,8 @@ export function StatCard({
   icon: LucideIcon;
   tone?: "blue" | "orange" | "green" | "navy";
   style?: React.CSSProperties;
+  /** Small control under the hint, such as a link. */
+  action?: React.ReactNode;
 }) {
   const tones = {
     blue: "bg-[rgba(2,144,222,0.1)] text-blue",
@@ -59,13 +62,19 @@ export function StatCard({
   };
   return (
     <div style={style} className={cn(cardCls, "hover-lift group flex items-start gap-4 p-5 animate-[fade-up_0.4s_cubic-bezier(0.16,1,0.3,1)_backwards]")}>
-      <span className={cn("grid size-11 shrink-0 place-items-center rounded-xl transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-110", tones[tone])}>
+      <span
+        className={cn(
+          "grid size-11 shrink-0 place-items-center rounded-xl transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-110",
+          tones[tone],
+        )}
+      >
         <Icon className="size-5" />
       </span>
       <div className="min-w-0">
         <p className="text-[13px] font-semibold text-ink-500">{label}</p>
         <p className="mt-1 truncate font-display text-[26px] font-extrabold leading-none text-ink-900">{value}</p>
         {hint && <p className="mt-2 text-xs text-ink-400">{hint}</p>}
+        {action && <div className="mt-1.5">{action}</div>}
       </div>
     </div>
   );
@@ -105,4 +114,5 @@ export const primaryBtn =
   "inline-flex items-center justify-center gap-2 rounded-xl bg-[linear-gradient(90deg,#0290de,#014e78)] px-5 py-2.5 text-sm font-bold text-white transition hover:bg-[linear-gradient(90.41deg,#0077f7_0.35%,#004691_106.01%)] disabled:cursor-not-allowed disabled:opacity-50";
 export const outlineBtn =
   "inline-flex items-center justify-center gap-2 rounded-xl border-[1.5px] border-blue bg-white px-5 py-2.5 text-sm font-bold text-blue transition hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-50";
-export const ghostBtn = "inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-ink-500 transition hover:bg-tint-200 hover:text-ink-900";
+export const ghostBtn =
+  "inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-ink-500 transition hover:bg-tint-200 hover:text-ink-900";

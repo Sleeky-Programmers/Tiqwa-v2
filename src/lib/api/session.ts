@@ -51,8 +51,6 @@ export function toProfile(u: WlUser): UserProfile {
     passportExpiry: "",
     passportCountry: "NG",
     memberSince: u.created_at ?? "",
-    tier: "Explorer",
-    points: 0,
   };
 }
 

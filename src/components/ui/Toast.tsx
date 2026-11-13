@@ -50,7 +50,11 @@ export function Toaster() {
             t.kind === "success" ? "border-[#bbf7d0]" : "border-[#fecaca]",
           )}
         >
-          {t.kind === "success" ? <CircleCheck className="mt-0.5 size-5 shrink-0 text-[#16a34a]" /> : <CircleAlert className="mt-0.5 size-5 shrink-0 text-error" />}
+          {t.kind === "success" ? (
+            <CircleCheck className="mt-0.5 size-5 shrink-0 text-[#16a34a]" />
+          ) : (
+            <CircleAlert className="mt-0.5 size-5 shrink-0 text-error" />
+          )}
           <p className="flex-1 text-sm font-medium text-ink-900">{t.message}</p>
           <button type="button" aria-label="Dismiss" onClick={() => dismiss(t.id)} className="text-ink-400 hover:text-ink-900">
             <X className="size-4" />

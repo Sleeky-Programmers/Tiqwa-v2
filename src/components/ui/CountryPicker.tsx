@@ -53,7 +53,12 @@ export function CountryPicker({
         aria-haspopup="listbox"
         aria-expanded={open}
         onClick={() => {
-          setActive(Math.max(0, countries.findIndex((c) => c.iso2 === value)));
+          setActive(
+            Math.max(
+              0,
+              countries.findIndex((c) => c.iso2 === value),
+            ),
+          );
           setOpen((o) => !o);
         }}
         className={cn(

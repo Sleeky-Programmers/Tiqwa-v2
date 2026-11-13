@@ -1,4 +1,10 @@
-export const suiteLinks = [{ label: "Properties", href: "https://www.tbilprop.com/" }] as const;
+/** Menu entries the backend can switch off (GET /get/menus), keyed by their slug. */
+export type NavItem = { label: string; href: string; menu?: string };
+
+/** Hides entries whose menu the backend has switched off; `null` (list unavailable) shows everything. */
+export function menuOn(items: readonly NavItem[], active: string[] | null): NavItem[] {
+  return items.filter((i) => !i.menu || !active || active.includes(i.menu));
+}
 
 export const mainNav = [
   { label: "Cheap Flights Nigeria", href: "/cheap-flight-deals", active: true },
@@ -14,8 +20,8 @@ export const footerColumns = [
       { label: "Domestic flights", href: "/flights" },
       { label: "International flights", href: "/flights" },
       { label: "Installment payment plan", href: "/flights" },
-      { label: "Holiday packages", href: "/holiday-packages" },
-      { label: "Visa assistance", href: "/contact?type=visa" },
+      { label: "Holiday packages", href: "/holiday-packages", menu: "vacation_packages" },
+      { label: "Visa assistance", href: "/visa", menu: "visa_assistance" },
       { label: "Proof of funds", href: "/contact?type=funds" },
     ],
   },
@@ -34,8 +40,8 @@ export const footerColumns = [
     title: "Company",
     links: [
       { label: "About TBILS", href: "/about" },
-      { label: "Manage booking", href: "/manage-booking" },
-      { label: "Contact us", href: "/contact" },
+      { label: "Manage booking", href: "/manage-booking", menu: "manage_booking" },
+      { label: "Contact us", href: "/contact", menu: "support" },
       { label: "FAQs", href: "/faq" },
       { label: "Blog", href: "/blog" },
     ],
@@ -53,11 +59,10 @@ export const footerColumns = [
 /** Mobile drawer items (as on tbils.com). */
 export const mobileNav = [
   { label: "Cheap Flights", href: "/cheap-flight-deals" },
-  { label: "Holiday Packages", href: "/holiday-packages" },
+  { label: "Holiday Packages", href: "/holiday-packages", menu: "vacation_packages" },
   { label: "Study Abroad", href: "/contact?type=study" },
-  { label: "Visa & Travel", href: "/contact?type=visa" },
-  { label: "Manage Booking", href: "/manage-booking" },
+  { label: "Visa & Travel", href: "/visa", menu: "visa_assistance" },
+  { label: "Manage Booking", href: "/manage-booking", menu: "manage_booking" },
   { label: "About Us", href: "/about" },
-  { label: "Properties", href: "https://www.tbilprop.com/" },
   { label: "Blog", href: "/blog" },
 ] as const;

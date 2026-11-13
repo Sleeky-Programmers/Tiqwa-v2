@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
   if (q.trim().length < 2) {
     // Comes back either as a plain list or paginated under `itemList`.
     const res = await upstream<WlPopularAirport[] | { itemList?: WlPopularAirport[] }>("/get/popular-airports", { auth: false });
-    const rows = res.ok ? (Array.isArray(res.data) ? res.data : res.data?.itemList ?? []) : [];
+    const rows = res.ok ? (Array.isArray(res.data) ? res.data : (res.data?.itemList ?? [])) : [];
     const popular: Airport[] = rows
       .filter((a) => a.iata_code)
       .map((a) => ({ code: a.iata_code!, city: a.city, name: a.name || getAirport(a.iata_code!)?.name || a.city, country: a.country }));
