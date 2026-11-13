@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { Rewards } from "@/app/api/rewards/route";
+import { refreshSession } from "@/lib/account";
 
 let cache: Rewards | null = null;
 
@@ -17,6 +18,7 @@ export function useRewards() {
     fetch("/api/rewards", { signal: ctrl.signal })
       .then(async (res) => {
         const json = await res.json().catch(() => null);
+        if (res.status === 401) void refreshSession();
         if (!res.ok) throw new Error(json?.error?.message ?? "We couldn't load your rewards.");
         cache = json as Rewards;
         setData(cache);

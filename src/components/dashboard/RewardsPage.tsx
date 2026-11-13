@@ -4,7 +4,8 @@ import { useState } from "react";
 import { Banknote, Check, Copy, Gift, MessageCircle, Share2, UserPlus, Users } from "lucide-react";
 import { naira } from "@/lib/flights/format";
 import { cn } from "@/lib/utils";
-import { postJson } from "@/components/ui/form";
+import { Field, inputCls, postJson, spinner, type Errors } from "@/components/ui/form";
+import { Modal } from "@/components/ui/Modal";
 import { toast } from "@/components/ui/Toast";
 import { EmptyState, SectionCard, StatCard, primaryBtn } from "./ui";
 import { useRewards } from "./useRewards";
@@ -21,7 +22,7 @@ const steps = [
 export function RewardsPage() {
   const { data, error, retry } = useRewards();
   const [copied, setCopied] = useState(false);
-  const [withdrawing, setWithdrawing] = useState(false);
+  const [withdrawOpen, setWithdrawOpen] = useState(false);
   const paidOut = data?.payouts.reduce((s, p) => s + p.amount, 0) ?? 0;
   const shareText = data?.code ? `Book flights from Nigeria and pay small small with TBiLS. Use my code ${data.code} when you book.` : "";
 
@@ -30,15 +31,6 @@ export function RewardsPage() {
     navigator.clipboard?.writeText(data.code).catch(() => {});
     setCopied(true);
     window.setTimeout(() => setCopied(false), 1600);
-  };
-
-  const withdraw = async () => {
-    setWithdrawing(true);
-    const { errors } = await postJson("/api/rewards/withdraw", {});
-    setWithdrawing(false);
-    if (Object.keys(errors).length) return toast.error(errors.form ?? "We couldn't send your withdrawal request.");
-    toast.success("Withdrawal requested. We'll confirm once it's processed.");
-    retry();
   };
 
   if (error) {
@@ -115,8 +107,8 @@ export function RewardsPage() {
               hint={data.canWithdraw ? "Available to withdraw" : "Earned from referrals"}
               action={
                 data.canWithdraw && data.total > 0 ? (
-                  <button type="button" onClick={withdraw} disabled={withdrawing} className="link-underline text-xs font-bold text-blue disabled:opacity-50">
-                    {withdrawing ? "Sending…" : "Withdraw"}
+                  <button type="button" onClick={() => setWithdrawOpen(true)} className="link-underline text-xs font-bold text-blue">
+                    Withdraw
                   </button>
                 ) : undefined
               }
@@ -141,6 +133,8 @@ export function RewardsPage() {
           Array.from({ length: 3 }, (_, i) => <div key={i} className="skeleton h-[104px] rounded-2xl" />)
         )}
       </div>
+
+      {data && <WithdrawDialog open={withdrawOpen} onClose={() => setWithdrawOpen(false)} max={data.total} banks={data.banks} onDone={retry} />}
 
       <SectionCard title="How it works">
         <ol data-reveal-stagger className="grid gap-4 md:grid-cols-3">
@@ -194,5 +188,99 @@ function History({ title, rows, empty }: { title: string; rows?: { key: string; 
         </ul>
       )}
     </SectionCard>
+  );
+}
+
+/** Asks for a payout of the referral rewards to a bank account. */
+function WithdrawDialog({ open, onClose, max, banks, onDone }: { open: boolean; onClose: () => void; max: number; banks: string[]; onDone: () => void }) {
+  const [v, setV] = useState({ amount: "", bankName: "", accountNumber: "" });
+  const [errors, setErrors] = useState<Errors>({});
+  const [busy, setBusy] = useState(false);
+  const listId = "withdraw-banks";
+  const set = (patch: Partial<typeof v>) => {
+    setV((x) => ({ ...x, ...patch }));
+    setErrors({});
+  };
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const local: Errors = {};
+    const amount = Number(v.amount);
+    if (!amount || amount < 1) local.amount = "Enter the amount to withdraw";
+    else if (amount > max) local.amount = `You can withdraw up to ${naira(max)}`;
+    if (!v.bankName.trim()) local.bankName = "Choose your bank";
+    else if (banks.length && !banks.includes(v.bankName.trim())) local.bankName = "Pick your bank from the list";
+    if (v.accountNumber.replace(/\D/g, "").length !== 10) local.accountNumber = "Enter your 10-digit account number";
+    if (Object.keys(local).length) return setErrors(local);
+    setBusy(true);
+    const { errors: remote } = await postJson("/api/rewards/withdraw", { amount, bankName: v.bankName.trim(), accountNumber: v.accountNumber });
+    setBusy(false);
+    if (Object.keys(remote).length) return setErrors(remote);
+    toast.success("Withdrawal requested. We'll confirm once it's processed.");
+    setV({ amount: "", bankName: "", accountNumber: "" });
+    onClose();
+    onDone();
+  };
+
+  return (
+    <Modal open={open} onClose={onClose} labelledBy="withdraw-title" className="max-w-[440px]">
+      <form onSubmit={submit} noValidate className="p-6">
+        <h2 id="withdraw-title" className="font-display text-xl font-extrabold text-ink-900">
+          Withdraw rewards
+        </h2>
+        <p className="mt-1 text-sm text-ink-500">You have {naira(max)} available. We pay it into the bank account you enter.</p>
+        {errors.form && <p className="mt-3 rounded-xl border border-[#fecaca] bg-[#fef2f2] px-3 py-2 text-sm text-[#b91c1c]">{errors.form}</p>}
+        <div className="mt-5 space-y-4">
+          <Field label="Amount (₦)" htmlFor="wd-amount" error={errors.amount}>
+            <input
+              id="wd-amount"
+              inputMode="numeric"
+              value={v.amount}
+              onChange={(e) => set({ amount: e.target.value.replace(/\D/g, "") })}
+              className={cn(inputCls, errors.amount && "border-error")}
+            />
+          </Field>
+          <Field label="Bank" htmlFor="wd-bank" error={errors.bankName}>
+            <input
+              id="wd-bank"
+              list={listId}
+              autoComplete="off"
+              value={v.bankName}
+              onChange={(e) => set({ bankName: e.target.value })}
+              placeholder="Start typing your bank"
+              className={cn(inputCls, errors.bankName && "border-error")}
+            />
+            <datalist id={listId}>
+              {banks.map((b) => (
+                <option key={b} value={b} />
+              ))}
+            </datalist>
+          </Field>
+          <Field label="Account number" htmlFor="wd-account" error={errors.accountNumber}>
+            <input
+              id="wd-account"
+              inputMode="numeric"
+              maxLength={10}
+              value={v.accountNumber}
+              onChange={(e) => set({ accountNumber: e.target.value.replace(/\D/g, "") })}
+              className={cn(inputCls, errors.accountNumber && "border-error")}
+            />
+          </Field>
+        </div>
+        <div className="mt-6 flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="press rounded-xl border border-[#e4e8ee] px-4 py-2.5 text-sm font-semibold text-ink-800 hover:border-blue"
+          >
+            Cancel
+          </button>
+          <button type="submit" disabled={busy} className={cn(primaryBtn, "disabled:opacity-60")}>
+            {busy && spinner}
+            {busy ? "Sending…" : "Request withdrawal"}
+          </button>
+        </div>
+      </form>
+    </Modal>
   );
 }

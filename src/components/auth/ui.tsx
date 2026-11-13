@@ -37,4 +37,4 @@ export function Notice({ tone = "success", children }: { tone?: "success" | "err
 }
 
 /** Only allow same-site paths as post-login destinations. */
-export const safeRedirect = (raw: string | null, fallback = "/dashboard") => (raw && raw.startsWith("/") && !raw.startsWith("//") ? raw : fallback);
+export const safeRedirect = (raw: string | null, fallback = "/dashboard") => (raw && /^\/(?![/\\])/.test(raw) ? raw : fallback);

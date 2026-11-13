@@ -27,7 +27,8 @@ export function LoginForm() {
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setBusy(true);
-    const { errors } = await postJson("/api/auth/login", v);
+    const { errors, data } = await postJson<{ error?: { code?: string } }>("/api/auth/login", v);
+    if (data?.error?.code === "EMAIL_UNVERIFIED") return router.push(`/verify-email?email=${encodeURIComponent(v.email.trim())}`);
     if (Object.keys(errors).length) {
       setBusy(false);
       return setErrors(errors);

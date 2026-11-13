@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { AlertTriangle, ArrowRight, CalendarCheck, Plane, Route, Search, Wallet } from "lucide-react";
 import { airlineLogo, RouteRow } from "@/components/flights/FlightCard";
 import { destinationImage } from "@/components/flights/SearchLoader";
-import { deals } from "@/data/deals";
+import type { Deal } from "@/data/deals";
 import { useProfile } from "@/lib/account";
 import { firstDeparture, statusLabel, type HistoryBooking } from "@/lib/booking/history";
 import { bookingTotals } from "@/lib/booking/pricing";
@@ -90,7 +90,7 @@ function NextTrip({ booking }: { booking: HistoryBooking }) {
 }
 
 /** /dashboard overview: greeting + search CTA, stats, next trip, spend chart, destinations, actions, deals. */
-export function DashboardHome() {
+export function DashboardHome({ deals }: { deals: Deal[] }) {
   const user = useProfile();
   const { bookings, error, refresh } = useBookings();
   const [hour, setHour] = useState<number | null>(null);
@@ -258,34 +258,36 @@ export function DashboardHome() {
           )}
         </SectionCard>
 
-        <SectionCard
-          title="Deals for you"
-          description="Handpicked fares from Nigeria this week"
-          action={
-            <Link href="/dashboard/flights" className={`${outlineBtn} px-4 py-2`}>
-              Search all
-            </Link>
-          }
-          bodyClassName="p-4"
-        >
-          <div className="no-scrollbar -mx-1 flex snap-x gap-3 overflow-x-auto px-1 pb-1">
-            {(m ? deals.slice(0, 6) : []).map((d) => (
-              <Link
-                key={d.id}
-                href={`/dashboard/flights/results?trip=${d.trip === "One way" ? "oneway" : "round"}&from=${d.fromCode}&to=${d.toCode}&depart=${defaultDate(14)}${d.trip === "One way" ? "" : `&return=${defaultDate(21)}`}&adults=1&children=0&infants=0&cabin=economy`}
-                className="group relative h-[180px] w-[170px] shrink-0 snap-start overflow-hidden rounded-2xl"
-              >
-                <Image src={d.image} alt="" fill sizes="170px" className="object-cover transition-transform duration-500 group-hover:scale-105" />
-                <div className="absolute inset-0 bg-[linear-gradient(rgba(4,14,28,0.2),rgba(3,12,24,0.9))]" />
-                <div className="absolute inset-x-3 bottom-3 text-white">
-                  <p className="text-[11px] font-semibold text-white/80">{d.from} to</p>
-                  <p className="font-display text-lg font-extrabold leading-tight">{d.to}</p>
-                  <p className="mt-1 text-sm font-bold">{naira(d.fare)}</p>
-                </div>
+        {deals.length > 0 && (
+          <SectionCard
+            title="Deals for you"
+            description="Handpicked fares from Nigeria this week"
+            action={
+              <Link href="/dashboard/flights" className={`${outlineBtn} px-4 py-2`}>
+                Search all
               </Link>
-            ))}
-          </div>
-        </SectionCard>
+            }
+            bodyClassName="p-4"
+          >
+            <div className="no-scrollbar -mx-1 flex snap-x gap-3 overflow-x-auto px-1 pb-1">
+              {(m ? deals.slice(0, 6) : []).map((d) => (
+                <Link
+                  key={d.id}
+                  href={`/dashboard/flights/results?trip=${d.trip === "One way" ? "oneway" : "round"}&from=${d.fromCode}&to=${d.toCode}&depart=${defaultDate(14)}${d.trip === "One way" ? "" : `&return=${defaultDate(21)}`}&adults=1&children=0&infants=0&cabin=economy`}
+                  className="group relative h-[180px] w-[170px] shrink-0 snap-start overflow-hidden rounded-2xl"
+                >
+                  <Image src={d.image} alt="" fill sizes="170px" className="object-cover transition-transform duration-500 group-hover:scale-105" />
+                  <div className="absolute inset-0 bg-[linear-gradient(rgba(4,14,28,0.2),rgba(3,12,24,0.9))]" />
+                  <div className="absolute inset-x-3 bottom-3 text-white">
+                    <p className="text-[11px] font-semibold text-white/80">{d.from} to</p>
+                    <p className="font-display text-lg font-extrabold leading-tight">{d.to}</p>
+                    <p className="mt-1 text-sm font-bold">{naira(d.fare)}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </SectionCard>
+        )}
       </div>
     </div>
   );

@@ -2,6 +2,7 @@
 
 import { useState, type ReactNode } from "react";
 import { Check, Eye, EyeOff, ShieldCheck } from "lucide-react";
+import { refreshSession } from "@/lib/account";
 import { cn } from "@/lib/utils";
 
 // Shared form styling for account screens (profile, sign-in, sign-up, password reset).
@@ -150,6 +151,8 @@ export async function postJson<T = unknown>(url: string, body: unknown, method =
   try {
     const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     const json = await res.json().catch(() => null);
+    // A 401 means the sign-in has expired: re-check the session so the dashboard sends the user to log in.
+    if (res.status === 401) void refreshSession();
     if (res.ok) return { errors: {}, data: json as T, status: res.status };
     const e = json?.error;
     const fields: Errors = typeof e === "object" && e?.fields ? { ...e.fields } : {};
